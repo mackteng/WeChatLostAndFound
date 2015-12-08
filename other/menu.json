@@ -1,12 +1,7 @@
-{i
-    "button": [
+{
+    "button": [ 
         {
-            "type": "click", 
-            "name": "今日歌曲", 
-            "key": "V1001_TODAY_MUSIC"
-        }, 
-        {
-            "name": "菜单", 
+            "name": "Menu", 
             "sub_button": [
                 {
                     "type": "view", 
@@ -19,9 +14,9 @@
                     "url": "http://v.qq.com/"
                 }, 
                 {
-                    "type": "scancode_push", 
+                    "type": "scancode_waitmsg", 
                     "name": "Register", 
-                    "key": "V1001_GOOD"
+                    "key": "RegisterTag"
                 }
             ]
         }
