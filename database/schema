@@ -1,0 +1,16 @@
+CREATE TABLE users (
+	OpenID varchar(255) PRIMARY KEY,
+	ActiveChannel int CHECK( ActiveChannel >= 1 AND ActiveChannel <= 5)
+)
+
+CREATE TABLE tag(
+
+	TagID varchar(255) PRIMARY KEY,
+	Name  varchar(255),
+	Description  varchar(255),
+	OwnerID varchar(255) references users(OpenID) NOT NULL,
+	OwnerChannel int CHECK( OwnerChannel >= 1 AND OwnerChannel <= 5),
+	FinderID varchar(255) references users(OpenID),
+	FinderChannel int CHECK( FinderChannel >= 1 AND FinderChannel <= 5)
+
+)

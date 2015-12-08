@@ -16,7 +16,7 @@ import (
 // 	Token - Selfdefined Token
 // 	Access - AcessToken used for calling the WeChat API
 
-type config struct {
+type Config struct {
 	AppId      string
 	AppSecret  string
 	Token      string
@@ -35,9 +35,9 @@ type AccessToken struct {
 
 // returns a new configuration (should only be called once)
 
-func NewConfig() *config {
+func NewConfig() *Config {
 
-	ret := &config{
+	ret := &Config{
 		AppId:     "wx97b3ede422c4956e",
 		AppSecret: "d4624c36b6795d1d99dcf0547af5443d",
 		Token:     "macktengmackteng",
@@ -54,7 +54,7 @@ func NewConfig() *config {
 
 // Refresh the access token in the global configuration struct
 
-func (c *config) RefreshAccessToken() {
+func (c *Config) RefreshAccessToken() {
 
 	_, _ = <-c.use
 
