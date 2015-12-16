@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// global configuration struct
+// WeChat configuration struct
 // Contains:
 //	AppId
 //	AppSecret
@@ -76,3 +76,10 @@ func (c *Config) RefreshAccessToken() {
 
 	c.use <- 1
 }
+
+type GlobalConfiguration struct {
+        WeChatConfig   *Config
+        DatabaseConfig *DatabaseAccessInfo
+}
+
+

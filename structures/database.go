@@ -12,8 +12,9 @@ type DatabaseAccessInfo struct {
 
 func NewDatabase() *DatabaseAccessInfo {
 
-	url := "postgresql://mackygood:seetopdf87abA1@lostandfound.cq7rqo2imtyn.ap-northeast-1.rds.amazonaws.com:5432/lostfound"
+	url := "postgresql://mackygood:seetopdf87abA1@lostandfound.cq7rqo2imtyn.ap-northeast-1.rds.amazonaws.com:5432/lostandfound"
 	db, err := sql.Open("postgres", url)
+	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
 	} else {

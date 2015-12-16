@@ -1,24 +1,35 @@
 {
     "button": [ 
         {
-            "name": "Menu", 
+            "name": "物主", 
             "sub_button": [
                 {
-                    "type": "view", 
-                    "name": "搜索", 
-                    "url": "http://www.soso.com/"
-                }, 
-                {
-                    "type": "view", 
-                    "name": "视频", 
-                    "url": "http://v.qq.com/"
-                }, 
+                    "type": "scancode_waitmsg", 
+                    "name": "註冊新物品", 
+                    "key": "RegisterTag"
+                }
+            ]
+        },
+	{
+            "name": "拾主", 
+            "sub_button": [
                 {
                     "type": "scancode_waitmsg", 
-                    "name": "Register", 
+                    "name": "找到新物品", 
+                    "key": "FindTag"
+                }
+            ]
+        },
+	{
+            "name": "系統服務", 
+            "sub_button": [
+                {
+                    "type": "scancode_waitmsg", 
+                    "name": "物品概況", 
                     "key": "RegisterTag"
                 }
             ]
         }
+
     ]
 }

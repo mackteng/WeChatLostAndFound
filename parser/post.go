@@ -11,14 +11,18 @@ func ParsePost(r *http.Request) (t structures.Message, err error) {
 
 	decoder := xml.NewDecoder(r.Body)
 
+	// universal properties
 	var ToUserName string
 	var FromUserName string
 	var CreateTime time.Duration
 	var MsgType string
 
+	// Text Message
 	var Content string
 	var MsgId int
 
+
+	// All Types of Events
 	var Event string
 	var EventKey string
 	var ScanResult string
@@ -55,8 +59,8 @@ func ParsePost(r *http.Request) (t structures.Message, err error) {
 
 	}
 
-	if Event == "" {
-		tmp := &structures.TextMessage{}
+	if MsgType != "event" {
+		tmp := &structures.UserMessage{}
 		tmp.ToUserName = ToUserName
 		tmp.FromUserName = FromUserName
 		tmp.CreateTime = CreateTime
@@ -64,8 +68,8 @@ func ParsePost(r *http.Request) (t structures.Message, err error) {
 		tmp.Content = Content
 		tmp.MsgId = MsgId
 		return tmp, nil
-	} else if Event == "scancode_push" || Event == "scancode_waitmsg" {
-		tmp := &structures.QRCodeMessage{}
+	} else {
+		tmp := &structures.EventMessage{}
 		tmp.ToUserName = ToUserName
 		tmp.FromUserName = FromUserName
 		tmp.CreateTime = CreateTime

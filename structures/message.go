@@ -6,17 +6,28 @@ type Message interface {
 	GetMsgType() string
 }
 
-type TextMessage struct {
+type UserMessage struct {
 	ToUserName   string        `xml:"ToUserName"`
 	FromUserName string        `xml:"FromUserName"`
 	CreateTime   time.Duration `xml:"CreateTime"`
 	MsgType      string        `xml:"MsgType"`
-
-	Content string `xml:"Content"`
 	MsgId   int    `xml:"MsgId"`
+
+	
+	Content string `xml:"Content"` // text message
+	
+	MediaId string // voice and video message id
+	Format string  // voice message format
+	
+	ThumbMediaId string // video message thumbnail
+	
+	Location_X string // location x
+	Location_Y string // location y
+	Scale int // Scale
+	Label string // Map
 }
 
-type QRCodeMessage struct {
+type EventMessage struct {
 	ToUserName   string        `xml:"ToUserName"`
 	FromUserName string        `xml:"FromUserName"`
 	CreateTime   time.Duration `xml:"CreateTime"`
@@ -27,10 +38,19 @@ type QRCodeMessage struct {
 	ScanResult string
 }
 
-func (c *QRCodeMessage) GetMsgType() string {
+
+
+type ItemInfo struct{
+	TagID string
+	Name string
+	Description string
+}
+
+
+func (c *EventMessage) GetMsgType() string {
 	return c.MsgType
 }
 
-func (c *TextMessage) GetMsgType() string {
+func (c *UserMessage) GetMsgType() string {
 	return c.MsgType
 }
