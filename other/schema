@@ -9,8 +9,8 @@ CREATE TABLE tag(
 	Name  varchar(255),
 	Description  varchar(255),
 	OwnerID varchar(255) references users(OpenID) NOT NULL,
-	OwnerChannel int CHECK(OwnerChannel >= 1 AND OwnerChannel <= 10),
+	OwnerChannel int CHECK(OwnerChannel >= 1 AND OwnerChannel <= 5),
 	FinderID varchar(255) references users(OpenID),
-	FinderChannel int CHECK(FinderChannel >= 11 AND FinderChannel <=20),
+	FinderChannel int CHECK(FinderChannel >= 6 AND FinderChannel <=10),
 	UNIQUE(OwnerID, OwnerChannel)
 )

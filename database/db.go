@@ -58,7 +58,31 @@ func addUser(dbconfig *structures.DatabaseAccessInfo, OpenID string) error {
 
 func NextFinderChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int {
 
-	return 0
+	db := dbconfig.Database
+        rows, err := db.Query("select finderchannel from tag where finderid = $1", OpenID)
+        defer rows.Close()
+        if err != nil {
+                log.Fatal(err)
+        } else {
+                var table [5]bool
+                for rows.Next() {
+                        var cur int
+                        err := rows.Scan(&cur)
+                        if err != nil {
+                                log.Fatal(err)
+                        } else {
+                                table[cur-6] = true
+                        }
+                }
+
+                for i := range table {
+                        if !table[i] {
+                                return i + 6
+                        }
+                }
+        }
+        return -1
+
 }
 
 func NextOwnerChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int {
@@ -69,7 +93,7 @@ func NextOwnerChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) in
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		var table [10]bool
+		var table [5]bool
 		for rows.Next() {
 			var cur int
 			err := rows.Scan(&cur)
@@ -88,6 +112,7 @@ func NextOwnerChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) in
 	}
 	return -1
 }
+
 
 func CurrentChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int {
 

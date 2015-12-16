@@ -1,35 +1,66 @@
 {
-    "button": [ 
-        {
-            "name": "物主", 
-            "sub_button": [
-                {
-                    "type": "scancode_waitmsg", 
-                    "name": "註冊新物品", 
-                    "key": "RegisterTag"
-                }
-            ]
-        },
-	{
-            "name": "拾主", 
-            "sub_button": [
-                {
-                    "type": "scancode_waitmsg", 
-                    "name": "找到新物品", 
-                    "key": "FindTag"
-                }
-            ]
-        },
-	{
-            "name": "系統服務", 
-            "sub_button": [
-                {
-                    "type": "scancode_waitmsg", 
-                    "name": "物品概況", 
-                    "key": "RegisterTag"
-                }
-            ]
-        }
+	"button": [{
+			"name": "我的",
+			"sub_button": [{
+				"type": "click",
+				"name": "頻道1",
+				"key": "OwnerChannel1"
+			}, {
+				"type": "click",
+				"name": "頻道2",
+				"key": "OwnerChannel2"
+			}, {
+				"type": "click",
+				"name": "頻道3",
+				"key": "OwnerChannel3"
+			}, {
+				"type": "click",
+				"name": "頻道4",
+				"key": "OwnerChannel4"
+			}, {
+				"type": "click",
+				"name": "頻道5",
+				"key": "OwnerChannel5"
+			}]
+		}, {
+			"name": "撿到",
+			"sub_button": [{
+				"type": "click",
+				"name": "頻道1",
+				"key": "FinderChannel1"
+			}, {
+				"type": "click",
+				"name": "頻道2",
+				"key": "FinderChannel2"
+			}, {
+				"type": "click",
+				"name": "頻道3",
+				"key": "FinderChannel3"
+			}, {
+				"type": "click",
+				"name": "頻道4",
+				"key": "FinderChannel4"
+			}, {
+				"type": "click",
+				"name": "頻道5",
+				"key": "FinderChannel5"
+			}]
+		}, {
+			"name": "掃描",
+			"sub_button": [{
+				"type": "scancode_waitmsg",
+				"name": "註冊新物品",
+				"key": "RegisterTag"
+			}, {
+				"type": "scancode_waitmsg",
+				"name": "找到物品",
+				"key": "FindTag"
+			}, {
+				"type": "scancode_waitmsg",
+				"name": "物品概況",
+				"key": "Overview"
+			}]
+		}
 
-    ]
+	]
 }
