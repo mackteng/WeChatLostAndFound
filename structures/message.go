@@ -35,10 +35,15 @@ type EventMessage struct {
 
 	Event      string `xml:"Event"`
 	EventKey   string `xml:"EventKey"`
+
 	ScanResult string
+	ScanCodeInfo ScanCodeInfo `xml:"ScanCodeInfo"`
 }
 
-
+type ScanCodeInfo struct{
+        ScanType string
+        ScanResult string
+}
 
 type ItemInfo struct{
 	TagID string
