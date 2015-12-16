@@ -2,11 +2,7 @@ package structures
 
 import "time"
 
-type Message interface {
-	GetMsgType() string
-}
-
-type UserMessage struct {
+type Message struct {
 	ToUserName   string        `xml:"ToUserName"`
 	FromUserName string        `xml:"FromUserName"`
 	CreateTime   time.Duration `xml:"CreateTime"`
@@ -25,20 +21,13 @@ type UserMessage struct {
 	Location_Y string // location y
 	Scale int // Scale
 	Label string // Map
-}
-
-type EventMessage struct {
-	ToUserName   string        `xml:"ToUserName"`
-	FromUserName string        `xml:"FromUserName"`
-	CreateTime   time.Duration `xml:"CreateTime"`
-	MsgType      string        `xml:"MsgType"`
 
 	Event      string `xml:"Event"`
 	EventKey   string `xml:"EventKey"`
 
-	ScanResult string
 	ScanCodeInfo ScanCodeInfo `xml:"ScanCodeInfo"`
 }
+
 
 type ScanCodeInfo struct{
         ScanType string
@@ -52,10 +41,11 @@ type ItemInfo struct{
 }
 
 
-func (c *EventMessage) GetMsgType() string {
-	return c.MsgType
+func (c *Message) GetMsgType() string {
+	if c.MsgType == "event"{
+		return c.Event	
+	} else{
+		return c.MsgType
+	}
 }
 
-func (c *UserMessage) GetMsgType() string {
-	return c.MsgType
-}

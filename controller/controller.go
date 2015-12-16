@@ -18,18 +18,16 @@ func EntryHandler(r *http.Request, config *structures.GlobalConfiguration) {
 		log.Fatal("Failed to Parse Message")
 	} else {
 
-		switch m.(type) {
-		case *structures.UserMessage:
-			textmessage := m.(*structures.UserMessage)
-			UserMessageHandler(textmessage, config)
-		case *structures.EventMessage:
-			qrcodemessage := m.(*structures.EventMessage)
-			EventHandler(qrcodemessage, config)
+		switch m.MsgType {
+		case "event":
+			EventMessageHandler(&m, config)
+		default:
+			UserMessageHandler(&m, config)
 		}
 	}
 }
 
-func UserMessageHandler(t *structures.UserMessage, config *structures.GlobalConfiguration) {
+func UserMessageHandler(t *structures.Message, config *structures.GlobalConfiguration) {
 
 	log.Println("UserMessageHandlerCalled")
 	fmt.Println(t)
@@ -39,13 +37,13 @@ func UserMessageHandler(t *structures.UserMessage, config *structures.GlobalConf
 
 
 
-func EventHandler(q *structures.EventMessage, config *structures.GlobalConfiguration) {
+func EventMessageHandler(q *structures.Message, config *structures.GlobalConfiguration) {
 
 	log.Println("EventMessageHandlerCalled")
 	
-	if !database.ItemExists(config.DatabaseConfig, q.ScanResult){
+	if !database.ItemExists(config.DatabaseConfig, q.ScanCodeInfo.ScanResult){
 		test := structures.ItemInfo{
-				q.ScanResult,
+				q.ScanCodeInfo.ScanResult,
 				"foo",
 				"foo",
 			}
@@ -53,7 +51,7 @@ func EventHandler(q *structures.EventMessage, config *structures.GlobalConfigura
 		database.AddItemOwner(config.DatabaseConfig , q.FromUserName, &test)
 	}else{
 
-		database.AddItemFinder(config.DatabaseConfig, q.FromUserName, q.ScanResult)
+		database.AddItemFinder(config.DatabaseConfig, q.FromUserName, q.ScanCodeInfo.ScanResult)
 
 	}
 
