@@ -42,10 +42,6 @@ type ItemInfo struct{
 
 
 func (c *Message) GetMsgType() string {
-	if c.MsgType == "event"{
-		return c.Event	
-	} else{
-		return c.MsgType
-	}
+	return c.MsgType
 }
 

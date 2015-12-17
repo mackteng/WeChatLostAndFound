@@ -2,12 +2,23 @@ package controller
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
 	"encoding/xml"
-	"fmt"
 	"log"
 	"net/http"
 )
+
+type handler func(*structures.Message, *structures.GlobalConfiguration) error
+
+var handlers = map[string] handler {
+
+	"text": TextMessageHandler,
+	"image": ImageMessageHandler,
+	"voice": VoiceMessageHandler,
+	"video": VideoMessageHandler,
+	"location" : LocationMessageHandler,
+
+	"event" : EventHandler,
+}
 
 func EntryHandler(r *http.Request, config *structures.GlobalConfiguration) {
 
@@ -21,44 +32,8 @@ func EntryHandler(r *http.Request, config *structures.GlobalConfiguration) {
 	if err != nil {
 		log.Fatal("Failed to Parse Message")
 	} else {
-
-		switch m.MsgType {
-		case "event":
-			EventMessageHandler(&m, config)
-		default:
-			UserMessageHandler(&m, config)
-		}
+		handlers[m.GetMsgType()](&m, config)
 	}
 }
 
-func UserMessageHandler(t *structures.Message, config *structures.GlobalConfiguration) {
 
-	log.Println("UserMessageHandlerCalled")
-	fmt.Println(t)
-
-}
-
-
-
-
-func EventMessageHandler(q *structures.Message, config *structures.GlobalConfiguration) {
-
-	log.Println("EventMessageHandlerCalled")
-	
-	if !database.ItemExists(config.DatabaseConfig, q.ScanCodeInfo.ScanResult){
-		test := structures.ItemInfo{
-				q.ScanCodeInfo.ScanResult,
-				"foo",
-				"foo",
-			}
-		
-		database.AddItemOwner(config.DatabaseConfig , q.FromUserName, &test)
-	}else{
-
-		database.AddItemFinder(config.DatabaseConfig, q.FromUserName, q.ScanCodeInfo.ScanResult)
-
-	}
-
-	fmt.Println(q)
-
-}
