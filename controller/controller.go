@@ -2,8 +2,8 @@ package controller
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/parser"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
+	"encoding/xml"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +12,11 @@ import (
 func EntryHandler(r *http.Request, config *structures.GlobalConfiguration) {
 
 	log.Println("Entry Handler Called")
-	m, err := parser.ParsePost(r)
+	
+
+	m:= structures.Message{}
+	decoder := xml.NewDecoder(r.Body)
+        err := decoder.Decode(&m)
 
 	if err != nil {
 		log.Fatal("Failed to Parse Message")
