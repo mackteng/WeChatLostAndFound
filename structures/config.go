@@ -78,8 +78,6 @@ func (c *Config) RefreshAccessToken() {
 }
 
 type GlobalConfiguration struct {
-        WeChatConfig   *Config
-        DatabaseConfig *DatabaseAccessInfo
+	WeChatConfig   *Config
+	DatabaseConfig *DatabaseAccessInfo
 }
-
-

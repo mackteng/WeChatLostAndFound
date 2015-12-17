@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/controller"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 
 	"fmt"
 	"log"
@@ -11,23 +11,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
-type handle struct{
+type handle struct {
 	config *structures.GlobalConfiguration
 }
 
 func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if( r.Method == "POST"){
-                controller.EntryHandler(r, h.config)
-	} else{
+	if r.Method == "POST" {
+		controller.EntryHandler(r, h.config)
+	} else {
 		r.ParseForm()
 		fmt.Println(r.Form["echoStr"][0])
 		fmt.Fprintf(w, r.Form["echoStr"][0])
 	}
-}	
-
-
+}
 
 func main() {
 
@@ -40,8 +37,8 @@ func main() {
 		DatabaseConfig: database,
 	}
 
-	h:= handle{
-		config : w,
+	h := handle{
+		config: w,
 	}
 	router := mux.NewRouter().StrictSlash(true)
 	router.Handle("/", &h)

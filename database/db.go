@@ -46,42 +46,41 @@ func addUser(dbconfig *structures.DatabaseAccessInfo, OpenID string) error {
 	log.Println("AddUser", OpenID)
 
 	db := dbconfig.Database
-	_, err := db.Exec("INSERT INTO users VALUES($1, $2)", OpenID,nil)
+	_, err := db.Exec("INSERT INTO users VALUES($1, $2)", OpenID, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("UserAdded", OpenID)
 	return err
-	
 
 }
 
 func NextFinderChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int {
 
 	db := dbconfig.Database
-        rows, err := db.Query("select finderchannel from tag where finderid = $1", OpenID)
-        defer rows.Close()
-        if err != nil {
-                log.Fatal(err)
-        } else {
-                var table [5]bool
-                for rows.Next() {
-                        var cur int
-                        err := rows.Scan(&cur)
-                        if err != nil {
-                                log.Fatal(err)
-                        } else {
-                                table[cur-6] = true
-                        }
-                }
+	rows, err := db.Query("select finderchannel from tag where finderid = $1", OpenID)
+	defer rows.Close()
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		var table [5]bool
+		for rows.Next() {
+			var cur int
+			err := rows.Scan(&cur)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				table[cur-6] = true
+			}
+		}
 
-                for i := range table {
-                        if !table[i] {
-                                return i + 6
-                        }
-                }
-        }
-        return -1
+		for i := range table {
+			if !table[i] {
+				return i + 6
+			}
+		}
+	}
+	return -1
 
 }
 
@@ -113,7 +112,6 @@ func NextOwnerChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) in
 	return -1
 }
 
-
 func CurrentChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int {
 
 	db := dbconfig.Database
@@ -131,9 +129,9 @@ func CurrentChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int 
 func ChangeChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string, NewChannel int) error {
 
 	db := dbconfig.Database
-	_,err := db.Exec("UPDATE users SET ActiveChannel=$1 WHERE OpenID = $2", NewChannel, OpenID)
+	_, err := db.Exec("UPDATE users SET ActiveChannel=$1 WHERE OpenID = $2", NewChannel, OpenID)
 	// flush message queue when channel is changed
-	if err!=nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -159,8 +157,8 @@ func AddItemOwner(dbconfig *structures.DatabaseAccessInfo, OpenID string, info *
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Adding item " , info.TagID , "for owner " , OpenID , "on channel " , next_channel)
-	ChangeChannel(dbconfig, OpenID, next_channel) 
+	log.Println("Adding item ", info.TagID, "for owner ", OpenID, "on channel ", next_channel)
+	ChangeChannel(dbconfig, OpenID, next_channel)
 	return err
 }
 

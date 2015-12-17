@@ -1,16 +1,9 @@
 package wechat
 
-import(
+import (
 	"fmt"
 )
 
-
-
-func SendMessageUserToUser(OpenID string, message string){
-
-
-
+func SendMessageUserToUser(OpenID string, message string) {
 
 }
-
-
