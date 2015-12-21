@@ -19,6 +19,7 @@ func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		controller.EntryHandler(r, h.config)
+		fmt.Fprintf(w, "success")
 	} else {
 		r.ParseForm()
 		fmt.Println(r.Form["echoStr"][0])
@@ -42,6 +43,5 @@ func main() {
 	}
 	router := mux.NewRouter().StrictSlash(true)
 	router.Handle("/", &h)
-
 	log.Fatal(http.ListenAndServe(":80", router))
 }

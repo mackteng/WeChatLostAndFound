@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
+	"errors"
 )
 
 func ItemExists(dbconfig *structures.DatabaseAccessInfo, TagID string) bool {
@@ -138,9 +139,9 @@ func ChangeChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string, NewCh
 	return err
 }
 
-func AddItemOwner(dbconfig *structures.DatabaseAccessInfo, OpenID string, info *structures.ItemInfo) error {
+func RegisterTag(dbconfig *structures.DatabaseAccessInfo, OpenID string, info *structures.ItemInfo) error {
 
-	log.Println("AddItemOwner: ", info)
+	log.Println("Database RegisterTag ", info)
 
 	db := dbconfig.Database
 
@@ -148,24 +149,48 @@ func AddItemOwner(dbconfig *structures.DatabaseAccessInfo, OpenID string, info *
 		addUser(dbconfig, OpenID)
 	}
 
+	if ItemExists(dbconfig, info.TagID) {
+
+		return errors.New("Item Already Registered")
+	}
+
 	// extract from info and insert into database
 
 	next_channel := NextOwnerChannel(dbconfig, OpenID)
+
+	if next_channel < 0 {
+		return errors.New(structures.REGISTER_LIMIT)
+	}
 
 	_, err := db.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5, $6, $7)`, info.TagID, info.Name, info.Description, OpenID, next_channel, nil, nil)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Adding item ", info.TagID, "for owner ", OpenID, "on channel ", next_channel)
+	log.Println("Added item ", info.TagID, "for owner ", OpenID, "on channel ", next_channel)
 	ChangeChannel(dbconfig, OpenID, next_channel)
 	return err
 }
 
-func AddItemFinder(dbconfig *structures.DatabaseAccessInfo, FinderOpenID string, TagID string) error {
+func FindTag(dbconfig *structures.DatabaseAccessInfo, FinderOpenID string, TagID string) error {
 
-	//db:= dbconfig.Database
+	log.Println("Database FindTag", FinderOpenID, " found ", TagID)
 
-	return nil
+	db:= dbconfig.Database
 
+	if !ItemExists(dbconfig, TagID) {
+		return errors.New("Item Not Yet Registered")	
+	}
+
+	next_channel := NextFinderChannel(dbconfig, FinderOpenID)
+
+	if next_channel < 0 {
+		return errors.New("Find Item Limit Reached")
+	}
+
+	_, err := db.Exec(`UPDATE tag SET finderid=$1, fiderchannel=$2 WHERE tagid=$3`, FinderOpenID, next_channel, TagID)
+
+	ChangeChannel(dbconfig, FinderOpenID, next_channel)
+	
+	return err
 }
