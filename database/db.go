@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
-	"errors"
 )
 
 func ItemExists(dbconfig *structures.DatabaseAccessInfo, TagID string) bool {
@@ -25,7 +24,7 @@ func ItemExists(dbconfig *structures.DatabaseAccessInfo, TagID string) bool {
 	return true
 }
 
-func userExists(dbconfig *structures.DatabaseAccessInfo, OpenID string) bool {
+func UserExists(dbconfig *structures.DatabaseAccessInfo, OpenID string) bool {
 
 	db := dbconfig.Database
 	var result string
@@ -42,7 +41,7 @@ func userExists(dbconfig *structures.DatabaseAccessInfo, OpenID string) bool {
 	return true
 }
 
-func addUser(dbconfig *structures.DatabaseAccessInfo, OpenID string) error {
+func AddUser(dbconfig *structures.DatabaseAccessInfo, OpenID string) error {
 
 	log.Println("AddUser", OpenID)
 
@@ -58,6 +57,7 @@ func addUser(dbconfig *structures.DatabaseAccessInfo, OpenID string) error {
 
 func NextFinderChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string) int {
 
+	return 6
 	db := dbconfig.Database
 	rows, err := db.Query("select finderchannel from tag where finderid = $1", OpenID)
 	defer rows.Close()
@@ -133,18 +133,19 @@ func ChangeChannel(dbconfig *structures.DatabaseAccessInfo, OpenID string, NewCh
 	_, err := db.Exec("UPDATE users SET ActiveChannel=$1 WHERE OpenID = $2", NewChannel, OpenID)
 	// flush message queue when channel is changed
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+	}else{
+		log.Println("Successfully Changed ", OpenID , "'s", " to ", NewChannel)
 	}
-
 	return err
 }
 
-func RegisterTag(dbconfig *structures.DatabaseAccessInfo, OpenID string, info *structures.ItemInfo) error {
+func RegisterTag(dbconfig *structures.DatabaseAccessInfo, OpenID string, next_channel int, info *structures.ItemInfo) error {
 
 	log.Println("Database RegisterTag ", info)
-
 	db := dbconfig.Database
 
+/*
 	if !userExists(dbconfig, OpenID) {
 		addUser(dbconfig, OpenID)
 	}
@@ -161,22 +162,24 @@ func RegisterTag(dbconfig *structures.DatabaseAccessInfo, OpenID string, info *s
 	if next_channel < 0 {
 		return errors.New(structures.REGISTER_LIMIT)
 	}
-
+*/
 	_, err := db.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5, $6, $7)`, info.TagID, info.Name, info.Description, OpenID, next_channel, nil, nil)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	log.Println("Added item ", info.TagID, "for owner ", OpenID, "on channel ", next_channel)
-	ChangeChannel(dbconfig, OpenID, next_channel)
 	return err
 }
 
-func FindTag(dbconfig *structures.DatabaseAccessInfo, FinderOpenID string, TagID string) error {
+func FindTag(dbconfig *structures.DatabaseAccessInfo, FinderOpenID string, next_channel int, TagID string) error {
 
 	log.Println("Database FindTag", FinderOpenID, " found ", TagID)
-
 	db:= dbconfig.Database
+/*
+	if !UserExists(dbconfig, FinderOpenID){
+		addUser(dbconfig, FinderOpenID)
+	}
 
 	if !ItemExists(dbconfig, TagID) {
 		return errors.New("Item Not Yet Registered")	
@@ -187,10 +190,41 @@ func FindTag(dbconfig *structures.DatabaseAccessInfo, FinderOpenID string, TagID
 	if next_channel < 0 {
 		return errors.New("Find Item Limit Reached")
 	}
+*/
+	_, err := db.Exec(`UPDATE tag SET finderid=$1, finderchannel=$2 WHERE tagid=$3`, FinderOpenID, next_channel, TagID)
 
-	_, err := db.Exec(`UPDATE tag SET finderid=$1, fiderchannel=$2 WHERE tagid=$3`, FinderOpenID, next_channel, TagID)
-
-	ChangeChannel(dbconfig, FinderOpenID, next_channel)
-	
 	return err
+}
+
+
+func FindCorrespondingUser(dbconfig *structures.DatabaseAccessInfo, OpenID string) (string, int, error) {
+
+
+	log.Println("Find Corresponding User")
+	db := dbconfig.Database
+	Channel := CurrentChannel(dbconfig, OpenID)
+
+
+	var id string
+	var channel int
+	var err error	
+
+	if Channel <= 5 {
+
+		err = db.QueryRow("select finderid, finderchannel FROM tag WHERE ownerid=$1 AND ownerchannel=$2", OpenID, Channel).Scan(&id, &channel)
+		if err!=nil{
+			log.Println(err)
+		}
+	
+
+	} else {
+
+		err = db.QueryRow("select ownerid, ownerchannel FROM tag WHERE finderid=$1 AND finderchannel=$2", OpenID, Channel).Scan(&id, &channel)
+		if err!=nil{
+                        log.Println(err)
+                }
+	
+	}
+
+	return id,channel,err
 }

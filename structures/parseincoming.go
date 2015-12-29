@@ -1,11 +1,10 @@
 package structures
 
-import "time"
 
 type Message struct {
 	ToUserName   string        `xml:"ToUserName"`
 	FromUserName string        `xml:"FromUserName"`
-	CreateTime   time.Duration `xml:"CreateTime"`
+	CreateTime   int64         `xml:"CreateTime"`
 	MsgType      string        `xml:"MsgType"`
 	MsgId        int           `xml:"MsgId"`
 

@@ -56,7 +56,6 @@ func NewConfig() *Config {
 
 func (c *Config) RefreshAccessToken() {
 
-	_, _ = <-c.use
 
 	cur := time.Now().Unix()
 
@@ -65,8 +64,9 @@ func (c *Config) RefreshAccessToken() {
 		return
 	}
 
+	_, _ = <-c.use
+	
 	requrl := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + c.AppId + "&secret=" + c.AppSecret
-	fmt.Println(requrl)
 	resp, err := http.Get(requrl)
 	if err == nil {
 		json.NewDecoder(resp.Body).Decode(&(c.Access))
@@ -77,7 +77,9 @@ func (c *Config) RefreshAccessToken() {
 	c.use <- 1
 }
 
-type GlobalConfiguration struct {
-	WeChatConfig   *Config
-	DatabaseConfig *DatabaseAccessInfo
+func (c *Config) GetAccessToken() string {
+
+	c.RefreshAccessToken()
+	return c.Access.AccessToken;
+
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"github.com/gorilla/mux"
 )
 
@@ -17,9 +16,9 @@ type handle struct {
 
 func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == "POST" {
-		controller.EntryHandler(r, h.config)
-		fmt.Fprintf(w, "success")
+	if r.Method == "POST" {		
+		controller.EntryHandler(r, w, h.config)
+		log.Println("DONE")
 	} else {
 		r.ParseForm()
 		fmt.Println(r.Form["echoStr"][0])
@@ -29,14 +28,7 @@ func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	configuration := structures.NewConfig()
-	configuration.RefreshAccessToken()
-	database := structures.NewDatabase()
-
-	w := &structures.GlobalConfiguration{
-		WeChatConfig:   configuration,
-		DatabaseConfig: database,
-	}
+	w := structures.InitGlobalConfig()
 
 	h := handle{
 		config: w,

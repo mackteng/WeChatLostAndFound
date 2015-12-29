@@ -1,5 +1,6 @@
 package structures
 
+import "encoding/xml"
 
 type Content struct {
 	Content string `json:"content"`
@@ -17,4 +18,11 @@ type WeChatMessage struct {
 	Voice   MediaID `json:"voice"`
 }
 
-
+type EchoTextMessage struct{
+	XMLName      xml.Name `xml:"xml"`
+	ToUserName  string  `xml:"ToUserName"`
+	FromUserName string `xml:"FromUserName"`
+	CreateTime   int64  `xml:"CreateTime"`
+	MsgType      string `xml:"MsgType"`
+	Content      string `xml:Content"`
+}

@@ -4,23 +4,28 @@ import (
 	"log"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/wechat"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/queue"
+	"errors"
+	"time"
+	"strconv"
 )
 
 var entryhandlers = map[string]handler{
 	"RegisterTag":RegisterTag,
 	"FindTag" : FindTag,
 	
-	"1": OwnerChannel1,	
-	"2": OwnerChannel2,	
-	"3": OwnerChannel3,	
-	"4": OwnerChannel4,	
-	"5": OwnerChannel5,
+	"1": changeChannel,	
+	"2": changeChannel,	
+	"3": changeChannel,	
+	"4": changeChannel,	
+	"5": changeChannel,
 
-	"6": FinderChannel1,
-	"7": FinderChannel2,
-	"8": FinderChannel3,
-	"9": FinderChannel4,
-	"10": FinderChannel5,
+	"6": changeChannel,
+	"7": changeChannel,
+	"8": changeChannel,
+	"9": changeChannel,
+	"10": changeChannel,
 	
 }
 
@@ -48,7 +53,35 @@ func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) 
 		"foo",
 	}
 
-	err := database.RegisterTag(config.DatabaseConfig, q.FromUserName, &test)
+	dbconfig := config.DatabaseConfig
+	OpenID := q.FromUserName
+	var err error
+
+	if !database.UserExists(dbconfig, OpenID) {
+                database.AddUser(dbconfig, OpenID)
+        }
+
+        if database.ItemExists(dbconfig, test.TagID) {
+		wechat.SendItemAlreadyRegistered(OpenID, config)
+                return errors.New("Item Already Registered")
+        }
+
+        next_channel := database.NextOwnerChannel(dbconfig, OpenID)
+
+        if next_channel < 0 {
+                return errors.New(structures.REGISTER_LIMIT)
+        }
+
+
+	err = database.RegisterTag(config.DatabaseConfig, q.FromUserName, next_channel, &test)
+
+	if err == nil{
+		err = database.ChangeChannel(dbconfig, OpenID, next_channel)
+		if err == nil{
+			wechat.SendChannelChangeConfirmation(OpenID, next_channel,config)
+		}
+	}	
+
 	return err
 }
 
@@ -56,88 +89,58 @@ func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) 
 func FindTag(q *structures.Message, config *structures.GlobalConfiguration) error{
 
 	log.Println("FindTag Called", q)
-	err := database.FindTag(config.DatabaseConfig, q.FromUserName, q.ScanCodeInfo.ScanResult)
+	dbconfig := config.DatabaseConfig
+	FinderOpenID := q.FromUserName
+	TagID := q.ScanCodeInfo.ScanResult
+
+	if !database.UserExists(dbconfig, FinderOpenID){
+                database.AddUser(dbconfig, FinderOpenID)
+        }
+
+        if !database.ItemExists(dbconfig, TagID) {
+                return errors.New("Item Not Yet Registered")
+        }
+
+        next_channel := database.NextFinderChannel(dbconfig, FinderOpenID)
+
+        if next_channel < 0 {
+                return errors.New("Find Item Limit Reached")
+        }
+
+	err := database.FindTag(config.DatabaseConfig, FinderOpenID, next_channel, TagID)
+	
+	if err == nil{
+		err = database.ChangeChannel(dbconfig, FinderOpenID, next_channel)
+		if err == nil{
+			wechat.SendChannelChangeConfirmation(FinderOpenID, next_channel, config)
+		}
+	}
+
 	return err
 }
 
+func changeChannel(q *structures.Message, config *structures.GlobalConfiguration) error {
 
-func OwnerChannel1(q *structures.Message, config *structures.GlobalConfiguration) error{
+	OpenID := q.FromUserName
+	Channel , err := strconv.Atoi(q.EventKey)
 
-	err:= database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 1)
-	return err
+	err = database.ChangeChannel(config.DatabaseConfig, OpenID, Channel)
+
+        if err == nil{
+                err = wechat.SendChannelChangeConfirmation(OpenID, Channel, config)
+        }
+
+
+        strs, err:= queue.Flush(OpenID, Channel, config.RedisAccessInfo)
+
+        for str := len(strs)-1; str >= 0; str-- {
+                //log.Println(str)
+                time.Sleep(time.Second)
+                wechat.Send(strs[str], OpenID, -1, config)
+        }
+
+        return err
 }
-
-func OwnerChannel2(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err:= database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 2)
-	return err
-}
-
-func OwnerChannel3(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 3)
-	return err
-}
-
-func OwnerChannel4(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 4)
-	return err
-}
-
-func OwnerChannel5(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 5)
-	return err
-}
-
-
-func FinderChannel1(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 6)
-	return err
-}
-
-
-func FinderChannel2(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 7)
-	return err
-}
-
-
-func FinderChannel3(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 8)
-	return err
-}
-
-
-func FinderChannel4(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 9)
-	return err
-}
-
-
-func FinderChannel5(q *structures.Message, config *structures.GlobalConfiguration) error{
-
-	err := database.ChangeChannel(config.DatabaseConfig, q.FromUserName, 10)
-	return err
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
