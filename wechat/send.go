@@ -10,11 +10,11 @@ import (
 	//"io/ioutil"
 )
 
-func post(Payload string, config *structures.GlobalConfiguration) error {
+func post(Payload string, AccessUrl string, config *structures.GlobalConfiguration) error {
 
 	fmt.Println("Sending Message: ", Payload)
 
-	url := "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token=" + config.WeChatConfig.GetAccessToken()
+	url := AccessUrl + config.WeChatConfig.GetAccessToken()
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(Payload)))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -34,7 +34,7 @@ func post(Payload string, config *structures.GlobalConfiguration) error {
 
 }
 
-func Send(Payload string, OpenID string, Channel int, config *structures.GlobalConfiguration) error {
+func Send(Payload string, AccessUrl string, OpenID string, Channel int, config *structures.GlobalConfiguration) error {
 
 	var err error	
 
@@ -43,11 +43,11 @@ func Send(Payload string, OpenID string, Channel int, config *structures.GlobalC
 		cur_channel := database.CurrentChannel(config.DatabaseConfig, OpenID)		
 		
 		if cur_channel == Channel {
-			post(Payload, config)
+			post(Payload, AccessUrl, config)
 		}
 
 	} else {
-		err = post(Payload, config)
+		err = post(Payload, AccessUrl, config)
 	}
 
 	return err

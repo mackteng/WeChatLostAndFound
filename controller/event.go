@@ -33,13 +33,8 @@ var entryhandlers = map[string]handler{
 func EventHandler(q *structures.Message, config *structures.GlobalConfiguration) error {
 
 	log.Println("EventMessageHandlerCalled", q)
-	err := entryhandlers[q.EventKey](q,config)
+	return entryhandlers[q.EventKey](q,config)
 	
-	if err!=nil {
-		log.Println(err)
-	}
-
-	return nil
 }
 
 
@@ -132,13 +127,7 @@ func changeChannel(q *structures.Message, config *structures.GlobalConfiguration
 
 
         strs, err:= queue.Flush(OpenID, Channel, config.RedisAccessInfo)
-
-        for str := len(strs)-1; str >= 0; str-- {
-                //log.Println(str)
-                time.Sleep(time.Second)
-                wechat.Send(strs[str], OpenID, -1, config)
-        }
-
+        wechat.SendBulk(strs[str], OpenID, config)
         return err
 }
 

@@ -6,6 +6,25 @@ import(
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 )
 
+func PrepareTemplateMessage(OpenID string) string {
+
+	template := structures.TemplateMessage{
+
+		ToUser: OpenID,
+		TemplateID : "vC1xeaPgqKfQFSBj6d-8v9YagktAeHE7nDM0IUpaLl8",
+
+	}
+
+	b, err := json.Marshal(template)
+
+	if err != nil {
+		
+		fmt.Println(err)
+
+	}
+	return string(b)
+
+}
 
 func PrepareTextMessage(OpenID string, Message string) string{
 

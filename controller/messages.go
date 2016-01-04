@@ -14,12 +14,10 @@ func TextMessageHandler(m *structures.Message, config *structures.GlobalConfigur
 	SendToID, Channel, err := database.FindCorrespondingUser(config.DatabaseConfig, OpenID)
 	
 	if err == nil {
-		Payload := wechat.PrepareTextMessage(SendToID, m.Content)
-		wechat.Send(Payload, SendToID, Channel, config)
+		wechat.SendMessage(m.Content, SendToID, Channel, config)
 	}
-	log.Println(err)
+	
 	return err
-
 }
 
 func ImageMessageHandler(m *structures.Message, config *structures.GlobalConfiguration) error {

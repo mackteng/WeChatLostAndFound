@@ -12,17 +12,19 @@ import (
 
 type handle struct {
 	config *structures.GlobalConfiguration
+	request_table *structures.Set
 }
 
 func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {		
-		controller.EntryHandler(r, w, h.config)
+		controller.EntryHandler(r, w, h.request_table,  h.config)
 		log.Println("DONE")
 	} else {
+		fmt.Println(r)
 		r.ParseForm()
-		fmt.Println(r.Form["echoStr"][0])
-		fmt.Fprintf(w, r.Form["echoStr"][0])
+		fmt.Println(r.Body)
+		fmt.Fprintf(w, r.Form["echostr"][0])
 	}
 }
 
@@ -32,6 +34,9 @@ func main() {
 
 	h := handle{
 		config: w,
+		request_table : &structures.Set{
+					make(map[string] bool),
+				},
 	}
 	router := mux.NewRouter().StrictSlash(true)
 	router.Handle("/", &h)
