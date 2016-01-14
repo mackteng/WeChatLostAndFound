@@ -2,23 +2,25 @@ package main
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/controller"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/redis"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/wechat"
 
 	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"github.com/gorilla/mux"
 )
 
 type handle struct {
 	config *structures.GlobalConfiguration
-	request_table *structures.Set
 }
 
 func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == "POST" {		
-		controller.EntryHandler(r, w, h.request_table,  h.config)
+	if r.Method == "POST" {
+		controller.EntryHandler(r, w, h.config)
 		log.Println("DONE")
 	} else {
 		fmt.Println(r)
@@ -30,13 +32,18 @@ func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	w := structures.InitGlobalConfig()
+	wechat := wechat.NewWeChat()
+	database := database.NewDatabase()
+	redis := redis.NewRedis()
+
+	w := &structures.GlobalConfiguration{
+		WeChatInteractor:   wechat,
+		DatabaseInteractor: database,
+		RedisInteractor:    redis,
+	}
 
 	h := handle{
 		config: w,
-		request_table : &structures.Set{
-					make(map[string] bool),
-				},
 	}
 	router := mux.NewRouter().StrictSlash(true)
 	router.Handle("/", &h)

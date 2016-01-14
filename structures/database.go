@@ -1,5 +1,6 @@
 package structures
 
+/*
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
@@ -22,4 +23,14 @@ func NewDatabase() *DatabaseAccessInfo {
 		return &DatabaseAccessInfo{Database: db}
 	}
 	return nil
+}
+*/
+
+type DatabaseInteractor interface {
+	AddUser(OpenID string) error
+	RegisterTag(OpenID string, TagID string) (int, error)
+	FindTag(FinderOpenID string, TagID string) (int, error)
+	CurrentChannel(OpenID string) (int, error)
+	ChangeChannel(OpenID string, Channel int) error
+	FindCorrespondingUser(OpenID string) (string, int, error)
 }

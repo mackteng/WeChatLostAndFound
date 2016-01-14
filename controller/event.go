@@ -1,135 +1,98 @@
 package controller
 
 import (
-	"log"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/wechat"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/queue"
-	"errors"
-	"time"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/structures/sysmsg"
+	"log"
 	"strconv"
 )
 
 var entryhandlers = map[string]handler{
-	"RegisterTag":RegisterTag,
-	"FindTag" : FindTag,
-	
-	"1": changeChannel,	
-	"2": changeChannel,	
-	"3": changeChannel,	
-	"4": changeChannel,	
+	"RegisterTag": RegisterTag,
+	"FindTag":     FindTag,
+
+	"1": changeChannel,
+	"2": changeChannel,
+	"3": changeChannel,
+	"4": changeChannel,
 	"5": changeChannel,
 
-	"6": changeChannel,
-	"7": changeChannel,
-	"8": changeChannel,
-	"9": changeChannel,
+	"6":  changeChannel,
+	"7":  changeChannel,
+	"8":  changeChannel,
+	"9":  changeChannel,
 	"10": changeChannel,
-	
 }
-
 
 func EventHandler(q *structures.Message, config *structures.GlobalConfiguration) error {
 
 	log.Println("EventMessageHandlerCalled", q)
-	return entryhandlers[q.EventKey](q,config)
-	
+
+	if q.Event == "subscribe" {
+		return Subscribe(q, config)
+	} else {
+		if val, ok := entryhandlers[q.EventKey]; ok{
+			return val(q, config)
+		} else {
+			return nil
+		}
+	}
+
 }
 
 
-func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) error{
+func Subscribe(q *structures.Message, config *structures.GlobalConfiguration) error {
 
-	log.Println("Controller RegisterTag Called", q)
-
-	test := structures.ItemInfo{
-		q.ScanCodeInfo.ScanResult,
-		"foo",
-		"foo",
-	}
-
-	dbconfig := config.DatabaseConfig
-	OpenID := q.FromUserName
-	var err error
-
-	if !database.UserExists(dbconfig, OpenID) {
-                database.AddUser(dbconfig, OpenID)
-        }
-
-        if database.ItemExists(dbconfig, test.TagID) {
-		wechat.SendItemAlreadyRegistered(OpenID, config)
-                return errors.New("Item Already Registered")
-        }
-
-        next_channel := database.NextOwnerChannel(dbconfig, OpenID)
-
-        if next_channel < 0 {
-                return errors.New(structures.REGISTER_LIMIT)
-        }
-
-
-	err = database.RegisterTag(config.DatabaseConfig, q.FromUserName, next_channel, &test)
-
-	if err == nil{
-		err = database.ChangeChannel(dbconfig, OpenID, next_channel)
-		if err == nil{
-			wechat.SendChannelChangeConfirmation(OpenID, next_channel,config)
-		}
+	log.Println("Subscribe From User ", q.FromUserName)
+	err := config.DatabaseInteractor.AddUser(q.FromUserName)
+	
+	if err!=nil {
+		return err
 	}	
-
-	return err
+	return config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.WELCOME_MESSAGE, config)
 }
 
 
-func FindTag(q *structures.Message, config *structures.GlobalConfiguration) error{
+func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) error {
 
-	log.Println("FindTag Called", q)
-	dbconfig := config.DatabaseConfig
-	FinderOpenID := q.FromUserName
-	TagID := q.ScanCodeInfo.ScanResult
-
-	if !database.UserExists(dbconfig, FinderOpenID){
-                database.AddUser(dbconfig, FinderOpenID)
-        }
-
-        if !database.ItemExists(dbconfig, TagID) {
-                return errors.New("Item Not Yet Registered")
-        }
-
-        next_channel := database.NextFinderChannel(dbconfig, FinderOpenID)
-
-        if next_channel < 0 {
-                return errors.New("Find Item Limit Reached")
-        }
-
-	err := database.FindTag(config.DatabaseConfig, FinderOpenID, next_channel, TagID)
-	
-	if err == nil{
-		err = database.ChangeChannel(dbconfig, FinderOpenID, next_channel)
-		if err == nil{
-			wechat.SendChannelChangeConfirmation(FinderOpenID, next_channel, config)
-		}
+	channel, err := config.DatabaseInteractor.RegisterTag(q.FromUserName, q.ScanCodeInfo.ScanResult)
+	log.Println(channel)
+	if err != nil {
+		config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.REGISTER_FAIL, config)
+		return err
 	}
+	config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.REGISTER_SUCCESS, config)
+	return nil
 
-	return err
+}
+
+func FindTag(q *structures.Message, config *structures.GlobalConfiguration) error {
+
+	channel, err := config.DatabaseInteractor.FindTag(q.FromUserName, q.ScanCodeInfo.ScanResult)
+	log.Println(channel)
+	if err != nil {
+		config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.FIND_FAIL, config)
+		return err
+	}
+	config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.FIND_SUCCESS, config)
+	return nil
 }
 
 func changeChannel(q *structures.Message, config *structures.GlobalConfiguration) error {
 
 	OpenID := q.FromUserName
-	Channel , err := strconv.Atoi(q.EventKey)
+	Channel, err := strconv.Atoi(q.EventKey)
 
-	err = database.ChangeChannel(config.DatabaseConfig, OpenID, Channel)
+	err = config.DatabaseInteractor.ChangeChannel(OpenID, Channel)
 
-        if err == nil{
-                err = wechat.SendChannelChangeConfirmation(OpenID, Channel, config)
-        }
+	if err == nil {
+		err = config.WeChatInteractor.SendSystemMessage(OpenID, sysmsg.CHANNEL_CHANGE + q.EventKey, config)
+	} else {
+		config.WeChatInteractor.SendSystemMessage(OpenID, sysmsg.CHANNEL_CHANGE_FAIL, config)
+		return err
+	}
 
-
-        strs, err:= queue.Flush(OpenID, Channel, config.RedisAccessInfo)
-        wechat.SendBulk(strs[str], OpenID, config)
-        return err
+	strs, err := config.RedisInteractor.GetMessagesFromQueue(OpenID, Channel)
+	config.WeChatInteractor.SendBulkForwardMessages(strs, OpenID, config)
+	return err
 }
-
-
-

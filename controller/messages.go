@@ -2,21 +2,17 @@ package controller
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/wechat"
 	"log"
 )
 
 func TextMessageHandler(m *structures.Message, config *structures.GlobalConfiguration) error {
-	
-	log.Println("TextMessageHandler")	
+
+	log.Println("TextMessageHandler")
 	OpenID := m.FromUserName
-	SendToID, Channel, err := database.FindCorrespondingUser(config.DatabaseConfig, OpenID)
-	
+	SendToID, Channel, err := config.DatabaseInteractor.FindCorrespondingUser(OpenID)
 	if err == nil {
-		wechat.SendMessage(m.Content, SendToID, Channel, config)
+		return config.WeChatInteractor.SendForwardMessage(m.Content, SendToID, Channel, config)
 	}
-	
 	return err
 }
 
@@ -43,4 +39,3 @@ func LocationMessageHandler(m *structures.Message, config *structures.GlobalConf
 	return nil
 
 }
-

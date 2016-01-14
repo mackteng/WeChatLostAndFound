@@ -2,11 +2,11 @@ package wechat
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/queue"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
-	"net/http"
-	"fmt"
+	//"bitbucket.org/mack_teng/WeChatLostAndFound/redis"
+	//"bitbucket.org/mack_teng/WeChatLostAndFound/database"
 	"bytes"
+	"fmt"
+	"net/http"
 	//"io/ioutil"
 )
 
@@ -14,7 +14,7 @@ func post(Payload string, AccessUrl string, config *structures.GlobalConfigurati
 
 	fmt.Println("Sending Message: ", Payload)
 
-	url := AccessUrl + config.WeChatConfig.GetAccessToken()
+	url := AccessUrl + config.WeChatInteractor.GetAccessToken()
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(Payload)))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -34,14 +34,13 @@ func post(Payload string, AccessUrl string, config *structures.GlobalConfigurati
 
 }
 
-func Send(Payload string, AccessUrl string, OpenID string, Channel int, config *structures.GlobalConfiguration) error {
-
-	var err error	
-
+func send(Payload string, AccessUrl string, config *structures.GlobalConfiguration) error {
+/*
+	var err error
 	if Channel != -1 {
-		queue.AddMessageToQueue(OpenID, Channel, Payload, config.RedisAccessInfo)
-		cur_channel := database.CurrentChannel(config.DatabaseConfig, OpenID)		
-		
+		config.RedisInteractor.AddMessageToQueue(OpenID, Channel, Payload)
+		cur_channel, _ := config.DatabaseInteractor.CurrentChannel(OpenID)
+
 		if cur_channel == Channel {
 			post(Payload, AccessUrl, config)
 		}
@@ -49,6 +48,8 @@ func Send(Payload string, AccessUrl string, OpenID string, Channel int, config *
 	} else {
 		err = post(Payload, AccessUrl, config)
 	}
+*/
 
-	return err
+	
+	return post(Payload, AccessUrl, config)
 }

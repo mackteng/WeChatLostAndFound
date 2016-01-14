@@ -1,19 +1,18 @@
 package structures
 
-
 type GlobalConfiguration struct {
-        WeChatConfig   *Config
-        DatabaseConfig *DatabaseAccessInfo
-        RedisAccessInfo *RedisAccessInfo
+	WeChatInteractor   WeChatInteractor
+	DatabaseInteractor DatabaseInteractor
+	RedisInteractor    RedisInteractor
 }
 
-
+/*
 func InitGlobalConfig() *GlobalConfiguration {
 
 	configuration := NewConfig()
         configuration.RefreshAccessToken()
         database := NewDatabase()
-        redis := NewRedis()	
+        redis := NewRedis()
 
 	return &GlobalConfiguration{
 
@@ -25,3 +24,4 @@ func InitGlobalConfig() *GlobalConfiguration {
 
 
 }
+*/
