@@ -30,6 +30,13 @@ type ScanCodeInfo struct {
 	ScanResult string
 }
 
+type SignPackage struct {
+	Timestamp  int64  `json:"timestamp"`
+	NonceStr  string `json:"nonceStr"`
+	Signature string `json:"signature"`
+}
+
+
 type ItemInfo struct {
 	TagID       string
 	Name        string

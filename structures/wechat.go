@@ -2,6 +2,7 @@ package structures
 
 type WeChatInteractor interface {
 	GetAccessToken() string
+	GetJSApiTicket() string
 
 	SendSystemMessage(string, string, *GlobalConfiguration) error
 	SendTemplateMessage(string, string, *GlobalConfiguration) error

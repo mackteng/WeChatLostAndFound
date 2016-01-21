@@ -71,6 +71,30 @@ func (w *WeChat) GetAccessToken() string {
 
 }
 
+func (w *WeChat) GetJSApiTicket() string {
+
+	response := struct {
+		Code      int    `json:"errcode"`
+		Msg       string `json:"errmsg"`
+		Ticket    string `json:"ticket"`
+		ExpiresIn int    `json:"expires_in"`
+	}{}
+
+	requrl := "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=" + w.GetAccessToken() + "&type=jsapi"
+	resp, err := http.Get(requrl)
+	
+	if err != nil {
+		return ""
+	}
+	
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	return response.Ticket
+
+}
+
+
+
 func NewWeChat() *WeChat {
 
 	ret := &Config{

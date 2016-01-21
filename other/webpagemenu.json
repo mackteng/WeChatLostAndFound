@@ -1,0 +1,14 @@
+{
+    "button": [
+        {
+            "name": "系統操作", 
+            "type": "view", 
+            "url": "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx520c15f417810387&redirect_uri=http://ec2-52-68-156-216.ap-northeast-1.compute.amazonaws.com/menu&response_type=code&scope=snsapi_base&state=123#wechat_redirect"
+        }, 
+        {
+            "name": "撿到", 
+            "type": "scancode_waitmsg", 
+            "key": "FindTag"
+        }
+    ]
+}
