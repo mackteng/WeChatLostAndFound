@@ -6,6 +6,7 @@ import(
 	"crypto/sha1"
 	"fmt"
 	"net/http"
+	"encoding/json"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 )
 
@@ -15,15 +16,19 @@ var (
 )
 
 func GetConfig(r *http.Request, config *structures.GlobalConfiguration) structures.SignPackage {
+	
+	r.ParseForm()
+	
+
 
 	timestamp := time.Now().Unix()
 	noncestr := createNonceStr(16)
 	ticket := config.WeChatInteractor.GetJSApiTicket()	
-	
-	r.ParseForm()
+	openid := getOpenIDFromCode(r.Form["code"][0])	
 
-	url := "http://ec2-52-68-156-216.ap-northeast-1.compute.amazonaws.com/menu?code=" + r.Form["code"][0] + "&state=123" 
-		
+
+	url := "http://" + r.Host + r.URL.Path + "?code=" + r.Form["code"][0] + "&state=123" 
+	fmt.Println(url)
 
 
 
@@ -32,7 +37,7 @@ func GetConfig(r *http.Request, config *structures.GlobalConfiguration) structur
 	signature := fmt.Sprintf("%x", sha1.Sum([]byte(str)))
 
 	return structures.SignPackage{
-		timestamp, noncestr, signature,
+		openid, timestamp, noncestr, signature, 
 	}
 
 }
@@ -45,5 +50,25 @@ func createNonceStr(length int) string {
 		str += chars[tmpI : tmpI+1]
 	}
 	return str
+}
+
+func getOpenIDFromCode(code string) string {
+
+
+        response := struct {
+                OpenID string `json:"openid"`
+        }{}
+
+        requrl := "https://api.weixin.qq.com/sns/oauth2/access_token?appid=wx97b3ede422c4956e&secret=d4624c36b6795d1d99dcf0547af5443d&code=" + code + "&grant_type=authorization_code";
+
+        resp, err := http.Get(requrl)
+
+        if err != nil{
+                return ""
+        }
+
+        json.NewDecoder(resp.Body).Decode(&response)
+
+        return response.OpenID
 }
 

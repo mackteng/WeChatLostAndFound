@@ -93,8 +93,6 @@ func (w *WeChat) GetJSApiTicket() string {
 
 }
 
-
-
 func NewWeChat() *WeChat {
 
 	ret := &Config{
