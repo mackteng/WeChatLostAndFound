@@ -2,17 +2,14 @@ package wechat
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	//"bitbucket.org/mack_teng/WeChatLostAndFound/redis"
-	//"bitbucket.org/mack_teng/WeChatLostAndFound/database"
 	"bytes"
-	"fmt"
+	"log"
 	"net/http"
-	//"io/ioutil"
 )
 
 func post(Payload string, AccessUrl string, config *structures.GlobalConfiguration) error {
 
-	fmt.Println("Sending Message: ", Payload)
+	log.Println("send", Payload)
 
 	url := AccessUrl + config.WeChatInteractor.GetAccessToken()
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(Payload)))

@@ -3,8 +3,6 @@ package wechat
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
@@ -37,11 +35,9 @@ const (
 
 func (c *Config) refreshAccessToken() {
 
-	log.Println("Refreshring Access Token")
 	cur := time.Now().Unix()
 
 	if cur < c.Expiration {
-		fmt.Println("AccessTokenStillValid!")
 		return
 	}
 
@@ -52,14 +48,12 @@ func (c *Config) refreshAccessToken() {
 	if err == nil {
 		json.NewDecoder(resp.Body).Decode(&(c.Access))
 		c.Expiration = cur + int64(c.Access.ExpiresIn)
-		fmt.Println(c.Access)
 	}
 
 	c.use <- 1
 }
 
 func (c *Config) GetAccessToken() string {
-	log.Println("Getting Access Token")
 	c.refreshAccessToken()
 	return c.Access.AccessToken
 
@@ -124,12 +118,17 @@ func (WeChat *WeChat) SendTemplateMessage(OpenID, TemplateID string, Config *str
 	return send(Payload, TEMPLATE, Config)
 }
 
-func (WeChat *WeChat) SendForwardMessage(Msg string, OpenID string, Channel int, Config *structures.GlobalConfiguration) error {
+func (WeChat *WeChat) SendForwardMessage(Msg string, OpenID string,  TagID string, Config *structures.GlobalConfiguration) error {
 
-	cur_channel, _ := Config.DatabaseInteractor.CurrentChannel(OpenID)
 	Payload := prepareTextMessage(OpenID, Msg)
-        Config.RedisInteractor.AddMessageToQueue(OpenID, Channel, Payload)
-	if cur_channel == Channel {
+        Config.RedisInteractor.AddMessageToQueue(OpenID, TagID, Payload)
+	ActiveTag , err := Config.DatabaseInteractor.GetActiveTag(OpenID)
+
+	if err!=nil {
+		return err
+	}
+
+	if TagID == ActiveTag {
                         return send(Payload, USER, Config)
         } else {
 			return WeChat.SendTemplateMessage(OpenID, ALERT_MESSAGE_TEMPLATE_ID, Config)

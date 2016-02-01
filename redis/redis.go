@@ -3,7 +3,6 @@ package redis
 import (
 	"github.com/garyburd/redigo/redis"
 	"log"
-	"strconv"
 )
 
 type Redis struct {
@@ -31,22 +30,22 @@ func NewRedis() *Redis {
 	}
 }
 
-func (Redis *Redis) AddMessageToQueue(OpenID string, Channel int, Payload string) error {
+func (Redis *Redis) AddMessageToQueue(OpenID string, TagID string, Payload string) error {
 
-	key := "User:" + OpenID + ":Channel:" + strconv.Itoa(Channel)
+	key := "User:" + OpenID + ":TagID:" + TagID
 	conn := Redis.Pool.Get()
 
 	defer conn.Close()
 
 	_, err := conn.Do("LPUSH", key, Payload)
 	_, err = conn.Do("LTRIM", key, 0, 4)
-	log.Println("Added Message to Queue : " + OpenID)
+	log.Println("AddMessageToQueue User:",OpenID)
 	return err
 }
 
-func (Redis *Redis) GetMessagesFromQueue(OpenID string, Channel int) ([]string, error) {
+func (Redis *Redis) GetMessagesFromQueue(OpenID string, TagID string) ([]string, error) {
 
-	key := "User:" + OpenID + ":Channel:" + strconv.Itoa(Channel)
+	key := "User:" + OpenID + ":TagID:" + TagID
 	conn := Redis.Pool.Get()
 	defer conn.Close()
 
@@ -61,7 +60,7 @@ func (Redis *Redis) GetMessagesFromQueue(OpenID string, Channel int) ([]string, 
 		return nil, err
 	}
 
-	log.Println("Flushing Channel ", Channel, " of ", OpenID)
+	log.Println("Flushing TagID ", TagID, " of ", OpenID)
 	return nil, err
 }
 

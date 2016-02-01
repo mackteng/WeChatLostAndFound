@@ -5,6 +5,7 @@ import(
 	"time"
 	"crypto/sha1"
 	"fmt"
+	"log"
 	"net/http"
 	"encoding/json"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
@@ -19,16 +20,14 @@ func GetConfig(r *http.Request, config *structures.GlobalConfiguration) structur
 	
 	r.ParseForm()
 	
-
-
 	timestamp := time.Now().Unix()
 	noncestr := createNonceStr(16)
 	ticket := config.WeChatInteractor.GetJSApiTicket()	
 	openid := getOpenIDFromCode(r.Form["code"][0])	
 
 
+	log.Println("Auth.GetConfig", "GetJSAPITicket Done");
 	url := "http://" + r.Host + r.URL.Path + "?code=" + r.Form["code"][0] + "&state=123" 
-	fmt.Println(url)
 
 
 

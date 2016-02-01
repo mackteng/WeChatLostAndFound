@@ -3,7 +3,7 @@ package wechat
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 	"encoding/json"
-	"fmt"
+	"log"
 )
 
 func prepareTemplateMessage(OpenID string, TemplateID string) string {
@@ -18,7 +18,7 @@ func prepareTemplateMessage(OpenID string, TemplateID string) string {
 
 	if err != nil {
 
-		fmt.Println(err)
+		log.Println("prepareTemplateMessage",err)
 
 	}
 	return string(b)
@@ -37,7 +37,7 @@ func prepareTextMessage(OpenID string, Message string) string {
 	b, err := json.Marshal(config)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println("prepareTextMessage", err)
 	}
 
 	return string(b)
@@ -58,7 +58,7 @@ func prepareImageMessage(OpenID string, Media string) string{
         b, err := json.Marshal(config)
 
         if err != nil {
-                fmt.Println(err)
+                log.Println(prepareImageMessage,err)
         }
 
         return string(b)
@@ -77,7 +77,7 @@ func prepareVoiceMessage(OpenID string, Media string) string {
         b, err := json.Marshal(config)
 
         if err != nil {
-                fmt.Println(err)
+                log.Println("prepareVoiceMessage",err)
         }
 
         return string(b)

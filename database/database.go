@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 
+	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures/sysmsg"
 )
 
@@ -22,7 +23,7 @@ func NewDatabase() *Database {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Println("Database Connected")
+		log.Println("NewDatabase", "Database Connected")
 		return &Database{SQLDriver: db}
 	}
 	return nil
@@ -70,17 +71,16 @@ func (Database *Database) AddUser(OpenID string) error {
 		return nil
 	}
 
-	log.Println("Adding User: ", OpenID)
 	db := Database.SQLDriver
 	_, err := db.Exec("INSERT INTO users VALUES($1, $2)", OpenID, nil)
 	if err != nil {
 		return err
 	}
-	log.Println("User Added: ", OpenID)
+	log.Println("AddUser", OpenID)
 	return nil
 
 }
-
+/*
 func (Database *Database) nextOwnerChannel(OpenID string) (int, error) {
 
 	db := Database.SQLDriver
@@ -171,79 +171,87 @@ func (Database *Database) ChangeChannel(OpenID string, NewChannel int) error {
 	}
 	return nil
 }
-
-func (Database *Database) RegisterTag(OpenID string, TagID string) (int, error) {
+*/
+func (Database *Database) RegisterTag(OpenID string, TagID string, Info structures.ItemInfo) error {
 
 	if exists, _ := Database.itemExists(TagID); exists {
-		return -1, errors.New(sysmsg.ITEM_ALREADY_REGISTERED)
+		return  errors.New(sysmsg.ITEM_ALREADY_REGISTERED)
 	}
+	
 
-	next_channel, err := Database.nextOwnerChannel(OpenID)
+	_, err := Database.SQLDriver.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5)`, TagID, Info.Name, Info.Description, OpenID, nil)
 
 	if err != nil {
-		return -1, err
+		return err
 	}
-
-	_, err = Database.SQLDriver.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5, $6, $7)`, TagID, "foo", "foo", OpenID, next_channel, nil, nil)
-
-	if err != nil {
-		return -1, err
-	}
-	log.Println("Added item ", TagID, "for owner ", OpenID, "on channel ", next_channel)
-	return next_channel, nil
+	log.Println("RegisterTag", TagID, "for owner ", OpenID)
+	return err
 }
 
-func (Database *Database) FindTag(FinderOpenID string, TagID string) (int, error) {
+func (Database *Database) FindTag(FinderOpenID string, TagID string) error {
 
 	db := Database.SQLDriver
 
 	if exists, _ := Database.itemExists(TagID); !exists {
-		return -1, errors.New("sysmsg.ITEM_NOT_REGISTERED")
+		return  errors.New("sysmsg.ITEM_NOT_REGISTERED")
 	}
 
-	next_channel, err := Database.nextFinderChannel(FinderOpenID)
+	_, err := db.Exec(`UPDATE tag SET finderid=$1 WHERE tagid=$2`, FinderOpenID, TagID)
 
 	if err != nil {
-		return -1, err
+		return  err
 	}
-
-	_, err = db.Exec(`UPDATE tag SET finderid=$1, finderchannel=$2 WHERE tagid=$3`, FinderOpenID, next_channel, TagID)
-
-	if err != nil {
-		return -1, err
-	}
-	log.Println("Find Tag: ", FinderOpenID, " found ", TagID)
-	return next_channel, nil
+	log.Println("FindTag", FinderOpenID, " found ", TagID)
+	return err
 }
 
-func (Database *Database) FindCorrespondingUser(OpenID string) (string, int, error) {
 
-	var id string
-	var channel int
-	var err error
+func (Database *Database) GetActiveTag(OpenID string) (string, error) {
 
 	db := Database.SQLDriver
-	Channel, cerr := Database.CurrentChannel(OpenID)
+	var result string
+	err := db.QueryRow(`SELECT ActiveTag FROM users WHERE OpenID=$1`, OpenID).Scan(&result)
+	return result,err
+}
 
+
+func (Database *Database) ChangeActiveTag(OpenID, NewActiveTag string) error {
+
+        db := Database.SQLDriver
+        _, err :=db.Exec(`UPDATE users SET ActiveTag=$1 WHERE OpenID=$2`, NewActiveTag, OpenID)
+	return err
+}
+
+func (Database *Database) FindCorrespondingUser(OpenID string) (string, string,  error) {
+
+	var corresponding string
+	var err error
+	var ownerid string
+	var finderid string
+	db := Database.SQLDriver
+
+
+
+	TagID, cerr := Database.GetActiveTag(OpenID)
+	log.Println("TagID", TagID)
 	if cerr != nil {
-		return "", 0, nil
+		return "", "", cerr
+	}
+	err = db.QueryRow(`SELECT ownerid,finderid FROM tag WHERE TagID=$1`, TagID).Scan(&ownerid, &finderid)
+
+	log.Println(ownerid, finderid)
+
+	if err!= nil {
+		return "", "", err
 	}
 
-	if Channel <= 5 {
 
-		err = db.QueryRow("select finderid, finderchannel FROM tag WHERE ownerid=$1 AND ownerchannel=$2", OpenID, Channel).Scan(&id, &channel)
-		if err != nil {
-			return "", 0, err
-		}
-
+	if ownerid==OpenID {
+		corresponding = finderid;
 	} else {
-
-		err = db.QueryRow("select ownerid, ownerchannel FROM tag WHERE finderid=$1 AND finderchannel=$2", OpenID, Channel).Scan(&id, &channel)
-		if err != nil {
-			return "", 0, err
-		}
-
+		corresponding = ownerid;
 	}
 
-	return id, channel, err
+	log.Println("FindCorrespondingUser", corresponding)
+	return TagID, corresponding,  err
 }

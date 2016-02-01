@@ -23,6 +23,7 @@ type Message struct {
 	EventKey string `xml:"EventKey"`
 
 	ScanCodeInfo ScanCodeInfo `xml:"ScanCodeInfo"`
+	ItemInfo ItemInfo `xml:"ItemInfo"`
 }
 
 type ScanCodeInfo struct {
@@ -39,7 +40,6 @@ type SignPackage struct {
 
 
 type ItemInfo struct {
-	TagID       string
 	Name        string
 	Description string
 }
