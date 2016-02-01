@@ -23,7 +23,7 @@ type Message struct {
 	EventKey string `xml:"EventKey"`
 
 	ScanCodeInfo ScanCodeInfo `xml:"ScanCodeInfo"`
-	ItemInfo ItemInfo `xml:"ItemInfo"`
+	ItemInfo     ItemInfo     `xml:"ItemInfo"`
 }
 
 type ScanCodeInfo struct {
@@ -32,12 +32,11 @@ type ScanCodeInfo struct {
 }
 
 type SignPackage struct {
-	OpenID string `json:"openid"`
-	Timestamp  int64  `json:"timestamp"`
+	OpenID    string `json:"openid"`
+	Timestamp int64  `json:"timestamp"`
 	NonceStr  string `json:"nonceStr"`
 	Signature string `json:"signature"`
 }
-
 
 type ItemInfo struct {
 	Name        string

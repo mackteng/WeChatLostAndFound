@@ -18,7 +18,7 @@ func prepareTemplateMessage(OpenID string, TemplateID string) string {
 
 	if err != nil {
 
-		log.Println("prepareTemplateMessage",err)
+		log.Println("prepareTemplateMessage", err)
 
 	}
 	return string(b)

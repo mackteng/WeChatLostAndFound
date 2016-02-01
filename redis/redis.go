@@ -39,7 +39,7 @@ func (Redis *Redis) AddMessageToQueue(OpenID string, TagID string, Payload strin
 
 	_, err := conn.Do("LPUSH", key, Payload)
 	_, err = conn.Do("LTRIM", key, 0, 4)
-	log.Println("AddMessageToQueue User:",OpenID)
+	log.Println("AddMessageToQueue User:", OpenID)
 	return err
 }
 

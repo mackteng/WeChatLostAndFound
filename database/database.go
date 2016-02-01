@@ -80,6 +80,7 @@ func (Database *Database) AddUser(OpenID string) error {
 	return nil
 
 }
+
 /*
 func (Database *Database) nextOwnerChannel(OpenID string) (int, error) {
 
@@ -175,9 +176,8 @@ func (Database *Database) ChangeChannel(OpenID string, NewChannel int) error {
 func (Database *Database) RegisterTag(OpenID string, TagID string, Info structures.ItemInfo) error {
 
 	if exists, _ := Database.itemExists(TagID); exists {
-		return  errors.New(sysmsg.ITEM_ALREADY_REGISTERED)
+		return errors.New(sysmsg.ITEM_ALREADY_REGISTERED)
 	}
-	
 
 	_, err := Database.SQLDriver.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5)`, TagID, Info.Name, Info.Description, OpenID, nil)
 
@@ -193,44 +193,40 @@ func (Database *Database) FindTag(FinderOpenID string, TagID string) error {
 	db := Database.SQLDriver
 
 	if exists, _ := Database.itemExists(TagID); !exists {
-		return  errors.New("sysmsg.ITEM_NOT_REGISTERED")
+		return errors.New("sysmsg.ITEM_NOT_REGISTERED")
 	}
 
 	_, err := db.Exec(`UPDATE tag SET finderid=$1 WHERE tagid=$2`, FinderOpenID, TagID)
 
 	if err != nil {
-		return  err
+		return err
 	}
 	log.Println("FindTag", FinderOpenID, " found ", TagID)
 	return err
 }
-
 
 func (Database *Database) GetActiveTag(OpenID string) (string, error) {
 
 	db := Database.SQLDriver
 	var result string
 	err := db.QueryRow(`SELECT ActiveTag FROM users WHERE OpenID=$1`, OpenID).Scan(&result)
-	return result,err
+	return result, err
 }
-
 
 func (Database *Database) ChangeActiveTag(OpenID, NewActiveTag string) error {
 
-        db := Database.SQLDriver
-        _, err :=db.Exec(`UPDATE users SET ActiveTag=$1 WHERE OpenID=$2`, NewActiveTag, OpenID)
+	db := Database.SQLDriver
+	_, err := db.Exec(`UPDATE users SET ActiveTag=$1 WHERE OpenID=$2`, NewActiveTag, OpenID)
 	return err
 }
 
-func (Database *Database) FindCorrespondingUser(OpenID string) (string, string,  error) {
+func (Database *Database) FindCorrespondingUser(OpenID string) (string, string, error) {
 
 	var corresponding string
 	var err error
 	var ownerid string
 	var finderid string
 	db := Database.SQLDriver
-
-
 
 	TagID, cerr := Database.GetActiveTag(OpenID)
 	log.Println("TagID", TagID)
@@ -241,17 +237,16 @@ func (Database *Database) FindCorrespondingUser(OpenID string) (string, string, 
 
 	log.Println(ownerid, finderid)
 
-	if err!= nil {
+	if err != nil {
 		return "", "", err
 	}
 
-
-	if ownerid==OpenID {
-		corresponding = finderid;
+	if ownerid == OpenID {
+		corresponding = finderid
 	} else {
-		corresponding = ownerid;
+		corresponding = ownerid
 	}
 
 	log.Println("FindCorrespondingUser", corresponding)
-	return TagID, corresponding,  err
+	return TagID, corresponding, err
 }

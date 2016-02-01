@@ -2,19 +2,40 @@ package wechat
 
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
-	"encoding/json"
-	"net/http"
 	"time"
+	"log"
 )
 
-type Config struct {
-	AppId      string
-	AppSecret  string
-	Token      string
-	Access     AccessToken
-	Expiration int64
+const (
+	USER                      = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token="
+	TEMPLATE                  = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token="
+	ALERT_MESSAGE_TEMPLATE_ID = "vC1xeaPgqKfQFSBj6d-8v9YagktAeHE7nDM0IUpaLl8"
+)
 
-	use chan int
+type WeChat struct {
+	AppId     string
+	AppSecret string
+	Token     string
+	access    AccessTokenServer
+	ticket    JSTicketServer
+}
+type AccessTokenServer struct {
+	CachedAccessToken AccessToken
+	use               chan int
+	Expiration        int64
+}
+
+type JSTicketServer struct {
+	CachedJSTicket JSTicket
+	use            chan int
+	Expiration     int64
+}
+
+type JSTicket struct {
+	Code      int    `json:"errcode"`
+	Msg       string `json:"errmsg"`
+	Ticket    string `json:"ticket"`
+	ExpiresIn int    `json:"expires_in"`
 }
 
 type AccessToken struct {
@@ -22,90 +43,49 @@ type AccessToken struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-type WeChat struct {
-	AccessConfig *Config
-}
-
-const (
-	USER     = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token="
-	TEMPLATE = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token="
-
-	ALERT_MESSAGE_TEMPLATE_ID = "vC1xeaPgqKfQFSBj6d-8v9YagktAeHE7nDM0IUpaLl8" 
-)
-
-func (c *Config) refreshAccessToken() {
-
-	cur := time.Now().Unix()
-
-	if cur < c.Expiration {
-		return
-	}
-
-	_, _ = <-c.use
-
-	requrl := "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + c.AppId + "&secret=" + c.AppSecret
-	resp, err := http.Get(requrl)
-	if err == nil {
-		json.NewDecoder(resp.Body).Decode(&(c.Access))
-		c.Expiration = cur + int64(c.Access.ExpiresIn)
-	}
-
-	c.use <- 1
-}
-
-func (c *Config) GetAccessToken() string {
-	c.refreshAccessToken()
-	return c.Access.AccessToken
-
-}
-
-func (w *WeChat) GetAccessToken() string {
-
-	return w.AccessConfig.GetAccessToken()
-
-}
-
-func (w *WeChat) GetJSApiTicket() string {
-
-	response := struct {
-		Code      int    `json:"errcode"`
-		Msg       string `json:"errmsg"`
-		Ticket    string `json:"ticket"`
-		ExpiresIn int    `json:"expires_in"`
-	}{}
-
-	requrl := "https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=" + w.GetAccessToken() + "&type=jsapi"
-	resp, err := http.Get(requrl)
-	
-	if err != nil {
-		return ""
-	}
-	
-	json.NewDecoder(resp.Body).Decode(&response)
-
-	return response.Ticket
-
-}
-
 func NewWeChat() *WeChat {
 
-	ret := &Config{
+	ret := &WeChat{
 		AppId:     "wx97b3ede422c4956e",
 		AppSecret: "d4624c36b6795d1d99dcf0547af5443d",
 		Token:     "macktengmackteng",
-		Access: AccessToken{
-			AccessToken: "",
-			ExpiresIn:   0,
+		access: AccessTokenServer{
+			CachedAccessToken: AccessToken{
+				AccessToken: "",
+				ExpiresIn:   0,
+			},
+			use:        make(chan int),
+			Expiration: 0,
+		},
+
+		ticket: JSTicketServer{
+
+			CachedJSTicket: JSTicket{
+				Code:      0,
+				Msg:       "",
+				Ticket:    "",
+				ExpiresIn: 0,
+			},
+			use:        make(chan int),
+			Expiration: 0,
 		},
 	}
-	ret.use = make(chan int, 1)
-	ret.use <- 1
-	_ = ret.GetAccessToken()
-	return &WeChat{
-		AccessConfig: ret,
-	}
+	ret.access.use <- 1
+	ret.ticket.use <- 1
+	log.Println("AccessToken", ret.GetAccessToken())
+	log.Println("JSTicket", ret.GetJSApiTicket())
+	return ret
 }
 
+func (WeChat *WeChat) GetJSApiTicket() string {
+	log.Println("wechat getjsapi")
+	return WeChat.ticket.getJSApiTicket(WeChat.GetAccessToken())
+}
+
+func (WeChat *WeChat) GetAccessToken() string {
+	log.Println("wechataccesstoken")
+	return WeChat.access.getAccessToken()
+}
 func (WeChat *WeChat) SendSystemMessage(OpenID string, SystemID string, Config *structures.GlobalConfiguration) error {
 
 	Payload := prepareTextMessage(OpenID, SystemID)
@@ -118,20 +98,20 @@ func (WeChat *WeChat) SendTemplateMessage(OpenID, TemplateID string, Config *str
 	return send(Payload, TEMPLATE, Config)
 }
 
-func (WeChat *WeChat) SendForwardMessage(Msg string, OpenID string,  TagID string, Config *structures.GlobalConfiguration) error {
+func (WeChat *WeChat) SendForwardMessage(Msg string, OpenID string, TagID string, Config *structures.GlobalConfiguration) error {
 
 	Payload := prepareTextMessage(OpenID, Msg)
-        Config.RedisInteractor.AddMessageToQueue(OpenID, TagID, Payload)
-	ActiveTag , err := Config.DatabaseInteractor.GetActiveTag(OpenID)
+	Config.RedisInteractor.AddMessageToQueue(OpenID, TagID, Payload)
+	ActiveTag, err := Config.DatabaseInteractor.GetActiveTag(OpenID)
 
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
 	if TagID == ActiveTag {
-                        return send(Payload, USER, Config)
-        } else {
-			return WeChat.SendTemplateMessage(OpenID, ALERT_MESSAGE_TEMPLATE_ID, Config)
+		return send(Payload, USER, Config)
+	} else {
+		return WeChat.SendTemplateMessage(OpenID, ALERT_MESSAGE_TEMPLATE_ID, Config)
 	}
 }
 

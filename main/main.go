@@ -3,14 +3,13 @@ package main
 import (
 	"bitbucket.org/mack_teng/WeChatLostAndFound/controller"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/database"
+	"bitbucket.org/mack_teng/WeChatLostAndFound/menu"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/redis"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/structures"
 	"bitbucket.org/mack_teng/WeChatLostAndFound/wechat"
-	"bitbucket.org/mack_teng/WeChatLostAndFound/menu"
-	
+
 	"fmt"
 	"github.com/gorilla/mux"
-	//"github.com/gorilla/context"
 	"log"
 	"net/http"
 )
@@ -19,16 +18,15 @@ var w *structures.GlobalConfiguration
 
 func init() {
 	wechat := wechat.NewWeChat()
-        database := database.NewDatabase()
-        redis := redis.NewRedis()
+	database := database.NewDatabase()
+	redis := redis.NewRedis()
 
-        w = &structures.GlobalConfiguration{
-                WeChatInteractor:   wechat,
-                DatabaseInteractor: database,
-                RedisInteractor:    redis,
-        }
+	w = &structures.GlobalConfiguration{
+		WeChatInteractor:   wechat,
+		DatabaseInteractor: database,
+		RedisInteractor:    redis,
+	}
 }
-
 
 type handle struct {
 	config *structures.GlobalConfiguration
@@ -50,7 +48,7 @@ func (h *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	
+
 	h := handle{
 		config: w,
 	}

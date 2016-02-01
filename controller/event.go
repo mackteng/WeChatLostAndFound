@@ -18,7 +18,7 @@ func EventHandler(q *structures.Message, config *structures.GlobalConfiguration)
 	if q.Event == "subscribe" {
 		return Subscribe(q, config)
 	} else {
-		if val, ok := entryhandlers[q.EventKey]; ok{
+		if val, ok := entryhandlers[q.EventKey]; ok {
 			return val(q, config)
 		} else {
 			return nil
@@ -27,18 +27,16 @@ func EventHandler(q *structures.Message, config *structures.GlobalConfiguration)
 
 }
 
-
 func Subscribe(q *structures.Message, config *structures.GlobalConfiguration) error {
 
 	log.Println("Subscribe", q.FromUserName)
 	err := config.DatabaseInteractor.AddUser(q.FromUserName)
-	
-	if err!=nil {
+
+	if err != nil {
 		return err
-	}	
+	}
 	return config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.WELCOME_MESSAGE, config)
 }
-
 
 func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) error {
 
@@ -48,7 +46,7 @@ func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) 
 		return err
 	}
 
-	err = config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ScanCodeInfo.ScanResult);
+	err = config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ScanCodeInfo.ScanResult)
 	if err != nil {
 		config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.REGISTER_FAIL, config)
 		return err
@@ -66,33 +64,15 @@ func FindTag(q *structures.Message, config *structures.GlobalConfiguration) erro
 		return err
 	}
 
-	err = config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ScanCodeInfo.ScanResult);
-        if err != nil {
-                config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.FIND_FAIL, config)
-                return err
-        }
-
+	err = config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ScanCodeInfo.ScanResult)
+	if err != nil {
+		config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.FIND_FAIL, config)
+		return err
+	}
 
 	config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.FIND_SUCCESS, config)
 	return nil
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
 func changeChannel(q *structures.Message, config *structures.GlobalConfiguration) error {
