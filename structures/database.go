@@ -7,4 +7,8 @@ type DatabaseInteractor interface {
 	FindCorrespondingUser(OpenID string) (string, string, error)
 	GetActiveTag(OpenID string) (string, error)
 	ChangeActiveTag(OpenID, TagID string) error
+	GetAllOwnedItems(OpenID string) ([]ItemInfo, error)
+	//GetAllFoundItems(OpenID string) ([]string, error)
+	//DeleteFinder(OpenID, TagID string) error
+	
 }

@@ -41,6 +41,7 @@ type SignPackage struct {
 type ItemInfo struct {
 	Name        string
 	Description string
+	TagID string
 }
 
 func (c *Message) GetMsgType() string {

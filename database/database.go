@@ -23,7 +23,7 @@ func NewDatabase() *Database {
 	if err != nil {
 		log.Fatal(err)
 	} else {
-		log.Println("NewDatabase", "Database Connected")
+		log.Println("NewDatabase", "DatabaseConnected")
 		return &Database{SQLDriver: db}
 	}
 	return nil
@@ -80,99 +80,6 @@ func (Database *Database) AddUser(OpenID string) error {
 	return nil
 
 }
-
-/*
-func (Database *Database) nextOwnerChannel(OpenID string) (int, error) {
-
-	db := Database.SQLDriver
-	rows, err := db.Query("select ownerchannel from tag where ownerid = $1", OpenID)
-	defer rows.Close()
-	if err != nil {
-		return -1, err
-	} else {
-		var table [5]bool
-		for rows.Next() {
-			var cur int
-			err := rows.Scan(&cur)
-			if err != nil {
-				return -1, err
-			} else {
-				table[cur-1] = true
-			}
-		}
-
-		for i := range table {
-			if !table[i] {
-				return i + 1, nil
-			}
-		}
-	}
-	return -1, errors.New(sysmsg.OWNER_LIMIT_REACHED)
-}
-
-func (Database *Database) nextFinderChannel(OpenID string) (int, error) {
-
-	//return 6, nil
-
-	db := Database.SQLDriver
-	rows, err := db.Query("select finderchannel from tag where finderid = $1", OpenID)
-	defer rows.Close()
-	if err != nil {
-		return 1, err
-	} else {
-		var table [5]bool
-		for rows.Next() {
-			var cur int
-			err := rows.Scan(&cur)
-			if err != nil {
-				return 1, err
-			} else {
-				table[cur-6] = true
-			}
-		}
-
-		for i := range table {
-			if !table[i] {
-				return i + 6, nil
-			}
-		}
-	}
-	return -1, errors.New(sysmsg.FINDER_LIMIT_REACHED)
-
-}
-
-func (Database *Database) CurrentChannel(OpenID string) (int, error) {
-
-	db := Database.SQLDriver
-	var channel int
-	err := db.QueryRow("select ActiveChannel from users where OpenID=$1", OpenID).Scan(&channel)
-
-	if err != nil {
-		return -1, err
-	}
-
-	return channel, nil
-
-}
-
-func (Database *Database) ChangeChannel(OpenID string, NewChannel int) error {
-
-	cur, _ := Database.CurrentChannel(OpenID)
-
-	if cur == NewChannel{
-		return errors.New(sysmsg.SAME_CHANNEL)
-	}
-
-	db := Database.SQLDriver
-	_, err := db.Exec("UPDATE users SET ActiveChannel=$1 WHERE OpenID = $2", NewChannel, OpenID)
-	if err != nil {
-		return err
-	} else {
-		log.Println("Successfully Changed ", OpenID, "'s", " to ", NewChannel)
-	}
-	return nil
-}
-*/
 func (Database *Database) RegisterTag(OpenID string, TagID string, Info structures.ItemInfo) error {
 
 	if exists, _ := Database.itemExists(TagID); exists {
@@ -229,13 +136,11 @@ func (Database *Database) FindCorrespondingUser(OpenID string) (string, string, 
 	db := Database.SQLDriver
 
 	TagID, cerr := Database.GetActiveTag(OpenID)
-	log.Println("TagID", TagID)
 	if cerr != nil {
 		return "", "", cerr
 	}
 	err = db.QueryRow(`SELECT ownerid,finderid FROM tag WHERE TagID=$1`, TagID).Scan(&ownerid, &finderid)
 
-	log.Println(ownerid, finderid)
 
 	if err != nil {
 		return "", "", err
@@ -249,4 +154,45 @@ func (Database *Database) FindCorrespondingUser(OpenID string) (string, string, 
 
 	log.Println("FindCorrespondingUser", corresponding)
 	return TagID, corresponding, err
+}
+
+	
+func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo, error) {
+	
+	db:=Database.SQLDriver
+	var items []structures.ItemInfo	
+	var (
+		tagid string 
+		name  string 
+		description string
+		finderid sql.NullString
+	)
+
+	rows, err := db.Query(`SELECT tagid, name, description, finderid FROM tag WHERE ownerid=$1`, OpenID)
+	defer rows.Close()
+
+	if err!= nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err:=rows.Scan(&tagid, &name, &description, &finderid)
+
+		if err!=nil {
+			log.Println(err)
+			return nil, err
+		}
+		items = append(items,structures.ItemInfo {
+			TagID: tagid,
+			Name: name,
+			Description: description,
+		})
+		log.Println(tagid, name, description, finderid)
+	}
+
+
+
+
+	return items, nil
+
 }

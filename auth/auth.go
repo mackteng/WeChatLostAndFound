@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -19,13 +18,11 @@ var (
 func GetConfig(r *http.Request, config *structures.GlobalConfiguration) structures.SignPackage {
 
 	r.ParseForm()
-	log.Println("Auth")
 	timestamp := time.Now().Unix()
 	noncestr := createNonceStr(16)
 	ticket := config.WeChatInteractor.GetJSApiTicket()
 	openid := getOpenIDFromCode(r.Form["code"][0])
 
-	log.Println("Auth.GetConfig", "GetJSAPITicket Done")
 	url := "http://" + r.Host + r.URL.Path + "?code=" + r.Form["code"][0] + "&state=123"
 
 	str := fmt.Sprintf("jsapi_ticket=%s&noncestr=%s&timestamp=%d&url=%s",

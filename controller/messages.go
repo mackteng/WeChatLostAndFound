@@ -10,7 +10,6 @@ func TextMessageHandler(m *structures.Message, config *structures.GlobalConfigur
 	log.Println("TextMessageHandler")
 	OpenID := m.FromUserName
 	ActiveTag, SendToID, err := config.DatabaseInteractor.FindCorrespondingUser(OpenID)
-	log.Println(SendToID, ActiveTag)
 	if err == nil {
 		return config.WeChatInteractor.SendForwardMessage(m.Content, SendToID, ActiveTag, config)
 	}

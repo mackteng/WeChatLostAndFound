@@ -32,7 +32,7 @@ var DeleteFinder = function(){
 
 }
 
-var ActivateTag = function(){
+var ChangeToActiveTag = function(){
 
 
 
@@ -51,14 +51,14 @@ var DeleteTag = function(){
 
 var sendRegister = function(tagID, name, desc){
 
-	
-	var beforeSend = function(){
+	$("#confirm_register").off('click');
+	$("register_form").hide();
 
-		alert("Sending");		
+	var beforeSend = function(){
+		wx.closeWindow();
 	};
 
 	var success = function(response){
-		alert(response);
 	};
 
 	var data = 
@@ -97,10 +97,11 @@ var showMenu = function(tagid) {
   $form.show();
   
   $form.find("#confirm_register").on('click', function() {
-    $form.hide();
+    
     var $name = $("#item_name").val();
     var $desc = $("#item_desc").val();
     sendRegister(tagid,$name,$desc);
+
   });
 
   $form.find("#cancel_register").on('click', function() {

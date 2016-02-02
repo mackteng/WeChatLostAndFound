@@ -11,13 +11,13 @@
 <!----------Weixin JS-SDK Setup -->
 <script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
   <script>
-  OpenID = {{.OpenID}};
+  OpenID = {{.Auth.OpenID}};
   wx.config({
       debug: false,
       appId: 'wx97b3ede422c4956e',
-      timestamp: {{.Timestamp}},
-      nonceStr: {{.NonceStr}},
-      signature: {{.Signature}},
+      timestamp: {{.Auth.Timestamp}},
+      nonceStr: {{.Auth.NonceStr}},
+      signature: {{.Auth.Signature}},
       jsApiList: [
         'checkJsApi',
         'hideMenuItems',
@@ -49,14 +49,14 @@
 
   <div class="scroll_area" id="scroll">
     <div class="weui_cells">
-      
+      {{range .Items}}      
       <div class="weui_cell">
         <div class="item">
           <div class="weui_cell_bd cell_title">
-            <p>蘋果筆記型電腦</p>
+            <p>{{.Name}}</p>
           </div>
           <div class="weui_cell_bd cell_desc">
-            <p>MacBook Air 13"</p>
+            <p>{{.Description}}</p>
           </div>
         </div>
         <div class="options">
@@ -64,66 +64,7 @@
           <i class="weui_icon_msg weui_icon_cancel"></i>
         </div>
       </div>
-      
-      <div class="weui_cell">
-        <div class="item">
-          <div class="weui_cell_bd cell_title">
-            <p>蘋果筆記型電腦</p>
-          </div>
-          <div class="weui_cell_bd cell_desc">
-            <p>MacBook Air 13"</p>
-          </div>
-        </div>
-        <div class="options">
-          <i class="weui_icon_msg weui_icon_success"></i>
-          <i class="weui_icon_msg weui_icon_cancel"></i>
-        </div>
-      </div>
-      
-      <div class="weui_cell">
-        <div class="item">
-          <div class="weui_cell_bd cell_title">
-            <p>蘋果筆記型電腦</p>
-          </div>
-          <div class="weui_cell_bd cell_desc">
-            <p>MacBook Air 13"</p>
-          </div>
-        </div>
-        <div class="options">
-          <i class="weui_icon_msg weui_icon_success"></i>
-          <i class="weui_icon_msg weui_icon_cancel"></i>
-        </div>
-      </div>
-      
-      <div class="weui_cell">
-        <div class="item">
-          <div class="weui_cell_bd cell_title">
-            <p>蘋果筆記型電腦</p>
-          </div>
-          <div class="weui_cell_bd cell_desc">
-            <p>MacBook Air 13"</p>
-          </div>
-        </div>
-        <div class="options">
-          <i class="weui_icon_msg weui_icon_success"></i>
-          <i class="weui_icon_msg weui_icon_cancel"></i>
-        </div>
-      </div>
-      
-      <div class="weui_cell">
-        <div class="item">
-          <div class="weui_cell_bd cell_title">
-            <p>蘋果筆記型電腦</p>
-          </div>
-          <div class="weui_cell_bd cell_desc">
-            <p>MacBook Air 13"</p>
-          </div>
-        </div>
-        <div class="options">
-          <i class="weui_icon_msg weui_icon_success"></i>
-          <i class="weui_icon_msg weui_icon_cancel"></i>
-        </div>
-      </div>
+      {{ end }}
     </div>
   </div>
   
