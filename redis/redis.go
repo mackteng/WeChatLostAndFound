@@ -18,9 +18,7 @@ func NewRedis() *Redis {
 			c, err := redis.Dial("tcp", ":6379")
 			if err != nil {
 				panic(err.Error())
-			} else {
-				log.Println("Redis Connection Initialized")
-			}
+			} 
 			return c, err
 		},
 	}

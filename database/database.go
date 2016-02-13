@@ -59,6 +59,24 @@ func (Database *Database) userExists(OpenID string) (bool, error) {
 	return true, nil
 }
 
+func (Database *Database) userOwns(OpenID string, TagID string) (bool, error) {
+
+	db := Database.SQLDriver
+
+	var ownerid string
+	err:= db.QueryRow(`SELECT ownerid FROM tag WHERE tagid=$1`, TagID).Scan(&ownerid)
+
+	if err!=nil {
+		return false, err
+	}
+
+	if OpenID == ownerid {
+		return true , err
+	} else {
+		return false, err
+	}
+}
+
 func (Database *Database) AddUser(OpenID string) error {
 
 	exists, existserr := Database.userExists(OpenID)
@@ -123,7 +141,15 @@ func (Database *Database) GetActiveTag(OpenID string) (string, error) {
 func (Database *Database) ChangeActiveTag(OpenID, NewActiveTag string) error {
 
 	db := Database.SQLDriver
-	_, err := db.Exec(`UPDATE users SET ActiveTag=$1 WHERE OpenID=$2`, NewActiveTag, OpenID)
+
+	owns, err := Database.userOwns(OpenID, NewActiveTag)
+
+	if err!=nil {
+		return err
+	}
+	if owns {
+		_, err = db.Exec(`UPDATE users SET ActiveTag=$1 WHERE OpenID=$2`, NewActiveTag, OpenID)
+	}
 	return err
 }
 
@@ -157,7 +183,7 @@ func (Database *Database) FindCorrespondingUser(OpenID string) (string, string, 
 }
 
 	
-func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo, error) {
+func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo,  error) {
 	
 	db:=Database.SQLDriver
 	var items []structures.ItemInfo	
@@ -175,11 +201,16 @@ func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo
 		return nil, err
 	}
 
+
+	if err!=nil {
+		return nil, err
+	}
+
+
 	for rows.Next() {
 		err:=rows.Scan(&tagid, &name, &description, &finderid)
 
 		if err!=nil {
-			log.Println(err)
 			return nil, err
 		}
 		items = append(items,structures.ItemInfo {
@@ -187,12 +218,58 @@ func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo
 			Name: name,
 			Description: description,
 		})
-		log.Println(tagid, name, description, finderid)
+		log.Println(tagid, name, description, finderid) }
+	return items, nil
+}
+
+func (Database *Database) DeleteTag(OpenID, TagID string) error {
+	log.Println("DeleteTag", OpenID, TagID)
+	db := Database.SQLDriver
+
+	var ownerid string
+	var  finderid sql.NullString
+	
+
+	exists, err := Database.itemExists(TagID)
+
+	if !exists {
+		return errors.New("Item Does Not Exist")
+	}
+	
+	err = db.QueryRow(`SELECT ownerid, finderid FROM tag WHERE tagid= $1`, TagID).Scan(&ownerid, &finderid)
+
+	if err!=nil {
+		return err
 	}
 
+	if ownerid == OpenID {
+		_,err = db.Exec(`DELETE FROM tag WHERE tagid=$1`, TagID)
+	} else if finderid.Valid && finderid.String == OpenID {
+		_,err = db.Exec(`UPDATE tag SET finderid=$1 WHERE tagid=$2`, nil, TagID)
+	}
 
+	return err
+}
 
+func (Database *Database) DeleteFinder(OpenID, TagID string) error {
+	log.Println("DeleteFinder", OpenID, TagID)
+	db := Database.SQLDriver
 
-	return items, nil
+	exists, err := Database.itemExists(TagID)
 
+	if !exists || err!=nil{
+		return errors.New("Delete Finder")
+	}
+
+	owns, err := Database.userOwns(OpenID, TagID)
+
+	if err!=nil {
+		return err
+	}
+
+	if owns {
+		db.Exec(`UPDATE tag SET finderid=$1 WHERE tagid=$2`, nil, TagID)
+	}
+
+	return err
 }

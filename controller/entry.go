@@ -35,10 +35,12 @@ func EntryHandler(r *http.Request, w http.ResponseWriter, config *structures.Glo
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
-		log.Printf("%+v\n", m)
+		log.Printf("%#v\n", m)
 		if found, _ := config.RedisInteractor.IsDuplicateMsgID(m.FromUserName + strconv.FormatInt(m.CreateTime, 10) + strconv.Itoa(m.MsgId)); !found {
 			msg := handlers[m.GetMsgType()](&m, config)
-			log.Printf("%+v\n", msg)
+			if msg!=nil {
+				log.Println(msg)
+			}
 		}
 	}
 }

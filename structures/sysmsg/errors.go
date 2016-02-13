@@ -10,11 +10,10 @@ const (
 	FIND_SUCCESS = "您與失主已聯繫上，請立即傳送訊息連絡失主！"
 	FIND_FAIL    = "未能找到施主，您是否要註冊此物品？"
 
-	OWNER_LIMIT_REACHED  = "註冊物品數量已達上限"
-	FINDER_LIMIT_REACHED = "註冊物品數量已達上限"
+	DELETE_SUCCESS = "成功刪除物品!"
 
-	CHANNEL_CHANGE      = "已成功切換至頻道　"
-	CHANNEL_CHANGE_FAIL = "未能切換至頻道　"
 
-	SAME_CHANNEL = "已在該頻道上！"
+	TAG_CHANGE      = "已成功切換至頻道　"
+	TAG_CHANGE_FAIL = "未能切換至頻道　"
+
 )

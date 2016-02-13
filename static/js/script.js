@@ -13,16 +13,17 @@ function sendXMLMessage(data, beforeSend, success){
 	});
 }
 
-
-
-
-var BlockFinder = function(){
-
-
-
-
-
+function loadingScreen(){
+	$("#loadingToast").show();
 }
+
+
+
+function finishedLoadingScreen() {
+	$("#loadingToast").hide();
+	$("#finishedToast").show();
+}
+
 
 var DeleteFinder = function(){
 
@@ -32,33 +33,64 @@ var DeleteFinder = function(){
 
 }
 
-var ChangeToActiveTag = function(){
-
-
-
-
-
+var ChangeActiveTag = function(){
+	var $tagid = $(this).closest('.weui_cell').hasClass('weui_cell');
+	alert($tagid);
 }
 
 
 var DeleteTag = function(){
-
-
-
-
-
+		
+	var $tagid = $(this).closest('.weui_cell').data('tagid');
+	$deleteTagConfirm = $("#deleteTagConfirm");
+	$deleteTagConfirm.show();	
+	$deleteTagConfirm.on('click', '#delete_no', function(){$deleteTagConfirm.hide()});
+	$deleteTagConfirm.on('click', '#delete_yes',function(){sendDelete($tagid)});
 };
 
-var sendRegister = function(tagID, name, desc){
 
-	$("#confirm_register").off('click');
-	$("register_form").hide();
+var sendDelete = function(tagID) {
+	$("#deleteTagConfirm").off('click');
+	$("#deleteTagConfirm").hide();
+
 
 	var beforeSend = function(){
-		wx.closeWindow();
+		loadingScreen();	
 	};
 
 	var success = function(response){
+		finishedLoadingScreen();
+		wx.closeWindow();
+	};
+
+	var data = 
+    "<xml><ToUserName><![CDATA[" + "gh_6df161a83822" + "]]></ToUserName>" +
+    "<FromUserName><![CDATA[" + OpenID + "]]></FromUserName>" +
+    "<CreateTime>" + new Date().getTime() + "</CreateTime>" +
+    "<MsgType><![CDATA[event]]></MsgType>" +
+    "<Event><![CDATA[Click]]></Event>" +
+    "<EventKey><![CDATA[DeleteTag]]></EventKey>" +
+    "<ItemInfo>" + 
+    "<TagID><![CDATA[" + tagID + "]]></TagID>" + 
+    "<Name><![CDATA[" +  "]]></Name>"+
+    "<Description><![CDATA[" +"]]></Description>"+
+    "</ItemInfo>"+
+    "</xml>";
+	sendXMLMessage(data, beforeSend, success);
+
+}
+
+
+var sendRegister = function(tagID, name, desc){
+
+
+	var beforeSend = function(){
+	    loadingScreen();
+	};
+
+	var success = function(response){
+		finishedLoadingScreen();
+		wx.closeWindow();
 	};
 
 	var data = 
@@ -92,12 +124,12 @@ var openQR = function(){
 
 // Shows the menu and then 
 var showMenu = function(tagid) {
-  alert(tagid);
   var $form = $("#register_form");
   $form.show();
   
   $form.find("#confirm_register").on('click', function() {
-    
+    $(this).off('click'); 
+    $form.hide(); 
     var $name = $("#item_name").val();
     var $desc = $("#item_desc").val();
     sendRegister(tagid,$name,$desc);
@@ -111,5 +143,7 @@ var showMenu = function(tagid) {
 
 $(wx).ready(function(){
 		$("#register_button").on('click', openQR);
+		$(".deleteTag").on('click', DeleteTag);
+		$(".changeTag").on('click', ChangeActiveTag);
  	}
 );

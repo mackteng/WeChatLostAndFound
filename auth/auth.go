@@ -23,6 +23,8 @@ func GetConfig(r *http.Request, config *structures.GlobalConfiguration) structur
 	ticket := config.WeChatInteractor.GetJSApiTicket()
 	openid := getOpenIDFromCode(r.Form["code"][0])
 
+
+
 	url := "http://" + r.Host + r.URL.Path + "?code=" + r.Form["code"][0] + "&state=123"
 
 	str := fmt.Sprintf("jsapi_ticket=%s&noncestr=%s&timestamp=%d&url=%s",
@@ -45,7 +47,7 @@ func createNonceStr(length int) string {
 }
 
 func getOpenIDFromCode(code string) string {
-
+	fmt.Println(code)
 	response := struct {
 		OpenID string `json:"openid"`
 	}{}
@@ -59,6 +61,7 @@ func getOpenIDFromCode(code string) string {
 	}
 
 	json.NewDecoder(resp.Body).Decode(&response)
+	fmt.Println(response)
 
 	return response.OpenID
 }

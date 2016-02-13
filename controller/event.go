@@ -9,6 +9,8 @@ import (
 var entryhandlers = map[string]handler{
 	"RegisterTag": RegisterTag,
 	"FindTag":     FindTag,
+	"DeleteTag":   DeleteTag,
+	"ChangeActive": ChangeActive,
 }
 
 func EventHandler(q *structures.Message, config *structures.GlobalConfiguration) error {
@@ -74,22 +76,20 @@ func FindTag(q *structures.Message, config *structures.GlobalConfiguration) erro
 	return nil
 }
 
-/*
-func changeChannel(q *structures.Message, config *structures.GlobalConfiguration) error {
+func DeleteTag(q *structures.Message, config *structures.GlobalConfiguration) error {
 
-	OpenID := q.FromUserName
-	Channel, err := strconv.Atoi(q.EventKey)
+	err := config.DatabaseInteractor.DeleteTag(q.FromUserName, q.ItemInfo.TagID) 
 
-	err = config.DatabaseInteractor.ChangeChannel(OpenID, Channel)
+	if err != nil {
+                return err
+        }
+        return config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.DELETE_SUCCESS, config)
 
-	if err == nil {
-		err = config.WeChatInteractor.SendSystemMessage(OpenID, sysmsg.CHANNEL_CHANGE + q.EventKey, config)
-	} else {
-		config.WeChatInteractor.SendSystemMessage(OpenID, sysmsg.CHANNEL_CHANGE_FAIL, config)
-		return err
-	}
+}
 
-	strs, err := config.RedisInteractor.GetMessagesFromQueue(OpenID, Channel)
-	config.WeChatInteractor.SendBulkForwardMessages(strs, OpenID, config)
-	return err
-}*/
+func ChangeActive(q *structures.Message, config *structures.GlobalConfiguration) error {
+
+	log.Println("ChangeActive")
+
+	return config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ItemInfo.TagID)
+}
