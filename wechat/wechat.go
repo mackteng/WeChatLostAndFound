@@ -78,7 +78,6 @@ func (WeChat *WeChat) SendTemplateMessage(OpenID, TemplateID string, Config *str
 func (WeChat *WeChat) SendForwardMessage(Msg string, OpenID string, TagID string, Config *structures.GlobalConfiguration) error {
 
 	Payload := prepareTextMessage(OpenID, Msg)
-	Config.RedisInteractor.AddMessageToQueue(OpenID, TagID, Payload)
 	ActiveTag, err := Config.DatabaseInteractor.GetActiveTag(OpenID)
 
 	if err != nil {
@@ -88,6 +87,7 @@ func (WeChat *WeChat) SendForwardMessage(Msg string, OpenID string, TagID string
 	if TagID == ActiveTag {
 		return send(Payload, USER, Config)
 	} else {
+		Config.RedisInteractor.AddMessageToQueue(OpenID, TagID, Payload)
 		return WeChat.SendTemplateMessage(OpenID, ALERT_MESSAGE_TEMPLATE_ID, Config)
 	}
 }

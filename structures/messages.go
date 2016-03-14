@@ -42,6 +42,7 @@ type ItemInfo struct {
 	Name        string
 	Description string
 	TagID string
+	FinderID string
 }
 
 func (c *Message) GetMsgType() string {

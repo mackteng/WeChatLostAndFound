@@ -48,7 +48,7 @@ func RegisterTag(q *structures.Message, config *structures.GlobalConfiguration) 
 		return err
 	}
 
-	err = config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ScanCodeInfo.ScanResult)
+	//err = config.DatabaseInteractor.ChangeActiveTag(q.FromUserName, q.ScanCodeInfo.ScanResult)
 	if err != nil {
 		config.WeChatInteractor.SendSystemMessage(q.FromUserName, sysmsg.REGISTER_FAIL, config)
 		return err

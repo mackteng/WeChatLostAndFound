@@ -59,7 +59,7 @@ func (Database *Database) userExists(OpenID string) (bool, error) {
 	return true, nil
 }
 
-func (Database *Database) userOwns(OpenID string, TagID string) (bool, error) {
+func (Database *Database) userOwns(TagID string) (string, error) {
 
 	db := Database.SQLDriver
 
@@ -67,14 +67,10 @@ func (Database *Database) userOwns(OpenID string, TagID string) (bool, error) {
 	err:= db.QueryRow(`SELECT ownerid FROM tag WHERE tagid=$1`, TagID).Scan(&ownerid)
 
 	if err!=nil {
-		return false, err
+		return "", err
 	}
 
-	if OpenID == ownerid {
-		return true , err
-	} else {
-		return false, err
-	}
+	return ownerid , err
 }
 
 func (Database *Database) AddUser(OpenID string) error {
@@ -90,7 +86,7 @@ func (Database *Database) AddUser(OpenID string) error {
 	}
 
 	db := Database.SQLDriver
-	_, err := db.Exec("INSERT INTO users VALUES($1, $2)", OpenID, nil)
+	_, err := db.Exec("INSERT INTO users VALUES($1, $2)", OpenID, "")
 	if err != nil {
 		return err
 	}
@@ -104,7 +100,7 @@ func (Database *Database) RegisterTag(OpenID string, TagID string, Info structur
 		return errors.New(sysmsg.ITEM_ALREADY_REGISTERED)
 	}
 
-	_, err := Database.SQLDriver.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5)`, TagID, Info.Name, Info.Description, OpenID, nil)
+	_, err := Database.SQLDriver.Exec(`INSERT INTO tag VALUES($1, $2, $3, $4, $5)`, TagID, Info.Name, Info.Description, OpenID, "")
 
 	if err != nil {
 		return err
@@ -117,15 +113,39 @@ func (Database *Database) FindTag(FinderOpenID string, TagID string) error {
 
 	db := Database.SQLDriver
 
+
+	// check if the item exists before adding the FinderID. An item must be owned before it can be found.
 	if exists, _ := Database.itemExists(TagID); !exists {
 		return errors.New("sysmsg.ITEM_NOT_REGISTERED")
 	}
 
+	// update finder id of tag
 	_, err := db.Exec(`UPDATE tag SET finderid=$1 WHERE tagid=$2`, FinderOpenID, TagID)
 
 	if err != nil {
 		return err
 	}
+
+	// Change ActiveTag of Finder
+	Database.ChangeActiveTag(FinderOpenID, TagID)
+
+	// Change ActiveTag of Owner if ActiveTag of Owner is NULL
+	ownerid, err   := Database.userOwns(TagID)
+
+	if err != nil{
+		return err
+	}
+
+	activetag, err := Database.GetActiveTag(ownerid)
+
+	if err!=nil {
+		return err
+	}
+	
+	if activetag == "" {
+		Database.ChangeActiveTag(ownerid, TagID)
+	}
+
 	log.Println("FindTag", FinderOpenID, " found ", TagID)
 	return err
 }
@@ -142,12 +162,12 @@ func (Database *Database) ChangeActiveTag(OpenID, NewActiveTag string) error {
 
 	db := Database.SQLDriver
 
-	owns, err := Database.userOwns(OpenID, NewActiveTag)
+	owns, err := Database.userOwns(NewActiveTag)
 
 	if err!=nil {
 		return err
 	}
-	if owns {
+	if owns==OpenID {
 		_, err = db.Exec(`UPDATE users SET ActiveTag=$1 WHERE OpenID=$2`, NewActiveTag, OpenID)
 	}
 	return err
@@ -197,11 +217,6 @@ func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo
 	rows, err := db.Query(`SELECT tagid, name, description, finderid FROM tag WHERE ownerid=$1`, OpenID)
 	defer rows.Close()
 
-	if err!= nil {
-		return nil, err
-	}
-
-
 	if err!=nil {
 		return nil, err
 	}
@@ -213,12 +228,23 @@ func (Database *Database) GetAllOwnedItems(OpenID string) ([]structures.ItemInfo
 		if err!=nil {
 			return nil, err
 		}
-		items = append(items,structures.ItemInfo {
+
+
+		it := structures.ItemInfo {
 			TagID: tagid,
 			Name: name,
 			Description: description,
-		})
-		log.Println(tagid, name, description, finderid) }
+		}
+
+
+		if finderid.Valid{
+			it.FinderID = finderid.String
+		}
+
+		items = append(items, it)
+
+		log.Println(it)
+	}
 	return items, nil
 }
 
@@ -261,13 +287,13 @@ func (Database *Database) DeleteFinder(OpenID, TagID string) error {
 		return errors.New("Delete Finder")
 	}
 
-	owns, err := Database.userOwns(OpenID, TagID)
+	owns, err := Database.userOwns(TagID)
 
 	if err!=nil {
 		return err
 	}
 
-	if owns {
+	if owns == OpenID {
 		db.Exec(`UPDATE tag SET finderid=$1 WHERE tagid=$2`, nil, TagID)
 	}
 
